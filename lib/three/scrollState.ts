@@ -19,6 +19,9 @@ export const scrollState = {
     targetZ: 0,
   },
   rimIntensity: 1.2,
+  bloomIntensity: 0.25,
+  energyPulse: 0,
+  idleSpinY: 0.15,
 };
 
 export const scrollDisplay = {
@@ -26,6 +29,9 @@ export const scrollDisplay = {
   can: { ...scrollState.can },
   camera: { ...scrollState.camera },
   rimIntensity: scrollState.rimIntensity,
+  bloomIntensity: scrollState.bloomIntensity,
+  energyPulse: scrollState.energyPulse,
+  idleSpinY: scrollState.idleSpinY,
 };
 
 export function lerpScrollDisplay(factor: number) {
@@ -33,6 +39,12 @@ export function lerpScrollDisplay(factor: number) {
   scrollDisplay.progress += (scrollState.progress - scrollDisplay.progress) * t;
   scrollDisplay.rimIntensity +=
     (scrollState.rimIntensity - scrollDisplay.rimIntensity) * t;
+  scrollDisplay.bloomIntensity +=
+    (scrollState.bloomIntensity - scrollDisplay.bloomIntensity) * t;
+  scrollDisplay.energyPulse +=
+    (scrollState.energyPulse - scrollDisplay.energyPulse) * t;
+  scrollDisplay.idleSpinY +=
+    (scrollState.idleSpinY - scrollDisplay.idleSpinY) * t;
 
   (['x', 'y', 'z', 'rotX', 'rotY', 'rotZ', 'scale'] as const).forEach((k) => {
     scrollDisplay.can[k] += (scrollState.can[k] - scrollDisplay.can[k]) * t;

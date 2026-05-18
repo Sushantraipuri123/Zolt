@@ -6,9 +6,9 @@ const DEG = Math.PI / 180;
 export interface ScrollChoreography3dElements {
   hero: HTMLElement;
   heroContent?: HTMLElement;
+  heroContentTwo?: HTMLElement;
   heroScene?: HTMLElement;
-  story?: HTMLElement;
-  storyScene?: HTMLElement;
+  scrollCue?: HTMLElement;
 }
 
 function setCan(
@@ -49,14 +49,15 @@ export function createScrollChoreography3d(
   elements: ScrollChoreography3dElements,
   reducedMotion = false
 ) {
-  const { hero, heroContent, heroScene, story, storyScene } = elements;
+  const { hero, heroContent, heroContentTwo, heroScene, scrollCue } = elements;
 
   if (reducedMotion) {
-    gsap.set('.story-reveal', { opacity: 1, y: 0, x: 0 });
-    setCan(0.5, 0, 0, 5, -15, 0, 0.9);
-    setCam(0, 0.2, 5.2, 0.5, 0, 0);
+    setCan(0, 0.04, 0.05, 8, 35, 0, 0.82);
+    setCam(0, 0.1, 5.15, 0, 0.04, 0);
     scrollState.progress = 0;
-    return () => {};
+    scrollState.idleSpinY = 0;
+    scrollState.bloomIntensity = 0.28;
+    return () => { };
   }
 
   const mm = gsap.matchMedia();
@@ -73,261 +74,253 @@ export function createScrollChoreography3d(
       };
 
       if (isDesktop) {
-        // Hero start pose (desktop specific to clear text)
-        setCan(1.35, 0.1, 0, 4, -12, 0, 0.98);
-        setCam(0, 0.15, 5.4, 0.45, 0, 0);
-        scrollState.rimIntensity = 1.2;
+        // Stage 1 Coordinates - Centered, scaled up, tilted slightly
+        setCan(0, 0.05, 0, -5, -20, 0, 1.05);
+        setCam(0, 0.1, 5.2, 0, 0.05, 0);
+        scrollState.rimIntensity = 1.35;
+        scrollState.bloomIntensity = 0.28;
+        scrollState.idleSpinY = 0.15;
         scrollState.progress = 0;
 
         const tl = gsap.timeline({
           defaults: { ease: 'none' },
           onUpdate: () => {
             scrollState.progress = tl.progress();
+            scrollState.idleSpinY = Math.max(0, 0.15 * (1 - tl.progress() * 1.1));
           },
         });
 
-        // Phase 1 — push in
-        tl.to(
-          scrollState.camera,
-          {
-            z: 4.6,
-            y: 0.15,
-            duration: 0.2,
-            ease: 'power2.in',
-          },
-          0
-        );
+        // Spin, shrink and translate Can to perfectly align inside center video card in Stage 2
+        // Performs a full 360 degree head-over-heels flip on the X-axis (Pitch) so we see the top lid and back side!
         tl.to(
           scrollState.can,
           {
-            scale: 1.05,
-            rotX: 8 * DEG,
-            rotY: -6 * DEG,
-            duration: 0.2,
-            ease: 'power2.in',
-          },
-          0
-        );
-        tl.to(scrollState, { rimIntensity: 1.5, duration: 0.2 }, 0);
-
-        // Phase 2 — descend
-        tl.to(
-          scrollState.can,
-          {
-            x: 0.95,
-            y: -0.25,
-            z: -0.1,
-            rotX: 10 * DEG,
-            rotY: 12 * DEG,
-            scale: 0.95,
-            duration: 0.32,
-            ease: 'power1.inOut',
-          },
-          0.2
-        );
-        tl.to(
-          scrollState.camera,
-          {
-            y: -0.05,
-            z: 5.1,
-            targetY: -0.1,
-            duration: 0.32,
-            ease: 'power1.inOut',
-          },
-          0.2
-        );
-
-        // Phase 3 — arc right
-        tl.to(
-          scrollState.can,
-          {
-            x: 1.25,
-            y: -0.35,
-            z: -0.15,
-            rotX: 8 * DEG,
-            rotY: -8 * DEG,
-            rotZ: 1 * DEG,
-            scale: 0.88,
-            duration: 0.28,
-            ease: 'power2.inOut',
-          },
-          0.52
-        );
-        tl.to(
-          scrollState.camera,
-          {
-            x: 0.15,
-            targetX: 0.48,
-            targetY: -0.08,
-            duration: 0.28,
-            ease: 'power2.inOut',
-          },
-          0.52
-        );
-
-        // Phase 4 — settle story (aligned precisely on right column)
-        tl.to(
-          scrollState.can,
-          {
-            x: 1.4,
-            y: -0.2,
-            z: -0.12,
-            rotX: 6 * DEG,
-            rotY: -16 * DEG,
-            rotZ: 0,
+            x: 0,
+            y: 0.04,
+            z: 0.05,
+            rotX: (-5 + 360) * DEG,
+            rotY: 35 * DEG,
             scale: 0.82,
-            duration: 0.2,
-            ease: 'power3.out',
+            duration: 0.6,
+            ease: 'power1.inOut',
           },
-          0.8
+          0
         );
+
+        // Z-axis (Roll) wobble: tilts 12 degrees out in the middle of the flip and auto-corrects right as it lands
+        tl.to(
+          scrollState.can,
+          {
+            rotZ: 12 * DEG,
+            duration: 0.3,
+            ease: 'power1.out',
+          },
+          0
+        );
+        tl.to(
+          scrollState.can,
+          {
+            rotZ: 0,
+            duration: 0.3,
+            ease: 'power1.in',
+          },
+          0.3
+        );
+
         tl.to(
           scrollState.camera,
           {
-            x: 0.1,
-            y: 0,
-            z: 5.3,
-            targetX: 0.5,
-            targetY: -0.05,
-            duration: 0.2,
-            ease: 'power3.out',
+            x: 0,
+            y: 0.1,
+            z: 5.15,
+            targetX: 0,
+            targetY: 0.04,
+            targetZ: 0,
+            duration: 0.6,
+            ease: 'power1.inOut',
           },
-          0.8
+          0
         );
-        tl.to(scrollState, { rimIntensity: 1.35, duration: 0.2 }, 0.8);
+
+        tl.to(scrollState, { bloomIntensity: 0.42, rimIntensity: 1.6, duration: 0.6 }, 0);
 
         setupChoreography(tl, isDesktop);
       } else {
-        // Hero start pose (mobile centered)
-        setCan(0, -0.05, 0, 6, -18, 0, 0.9);
-        setCam(0, 0.25, 5.4, 0, 0.05, 0);
+        // Mobile coordinates
+        setCan(0, -0.05, 0, -4, -20, 0, 0.88);
+        setCam(0, 0.2, 5.6, 0, -0.05, 0);
         scrollState.rimIntensity = 1.2;
+        scrollState.bloomIntensity = 0.22;
+        scrollState.idleSpinY = 0.12;
         scrollState.progress = 0;
 
         const tl = gsap.timeline({
           defaults: { ease: 'none' },
           onUpdate: () => {
             scrollState.progress = tl.progress();
+            scrollState.idleSpinY = Math.max(0, 0.12 * (1 - tl.progress()));
           },
         });
 
+        // Mobile head-over-heels flip
         tl.to(
           scrollState.can,
           {
-            y: -0.2,
-            scale: 1.02,
-            rotX: 8 * DEG,
-            rotY: 5 * DEG,
-            duration: 0.25,
-            ease: 'power2.in',
+            y: -0.12,
+            rotX: (-4 + 360) * DEG,
+            rotY: 35 * DEG,
+            scale: 0.72,
+            duration: 0.6,
+            ease: 'power1.inOut',
           },
           0
-        )
-          .to(
-            scrollState.can,
-            {
-              y: -0.85,
-              scale: 0.88,
-              rotY: -10 * DEG,
-              duration: 0.35,
-              ease: 'power1.inOut',
-            },
-            0.25
-          )
-          .to(
-            scrollState.can,
-            {
-              x: 0.35,
-              y: -1.1,
-              scale: 0.78,
-              rotX: 6 * DEG,
-              rotY: -18 * DEG,
-              duration: 0.4,
-              ease: 'power2.out',
-            },
-            0.6
-          );
-        tl.to(
-          scrollState.camera,
-          { y: -0.1, z: 5.5, targetY: -0.3, duration: 0.5, ease: 'power1.inOut' },
-          0.2
         );
 
+        // Mobile Z-axis wobble
+        tl.to(
+          scrollState.can,
+          {
+            rotZ: 10 * DEG,
+            duration: 0.3,
+            ease: 'power1.out',
+          },
+          0
+        );
+        tl.to(
+          scrollState.can,
+          {
+            rotZ: 0,
+            duration: 0.3,
+            ease: 'power1.in',
+          },
+          0.3
+        );
+
+        tl.to(
+          scrollState.camera,
+          {
+            y: 0.15,
+            z: 5.4,
+            targetY: -0.12,
+            duration: 0.6,
+            ease: 'power1.inOut',
+          },
+          0
+        );
+
+        tl.to(scrollState, { idleSpinY: 0, duration: 0.6 }, 0);
+
         setupChoreography(tl, isDesktop);
+      }
+
+      function setupChoreography(tl: gsap.core.Timeline, desktop: boolean) {
+        // Stage 1 Content fades out
+        if (heroContent) {
+          tl.fromTo(
+            heroContent,
+            { opacity: 1, y: 0, filter: 'blur(0px)' },
+            {
+              opacity: 0,
+              y: -50,
+              filter: 'blur(8px)',
+              duration: 0.35,
+              ease: 'power2.in',
+            },
+            0
+          );
+        }
+
+        if (scrollCue) {
+          tl.to(scrollCue, { opacity: 0, y: -12, duration: 0.15, ease: 'power2.in' }, 0);
+        }
+
+        // Stage 2 Content fades and slides in
+        if (heroContentTwo) {
+          const leftCol = heroContentTwo.querySelector('.hero-content-two-left');
+          const rightCol = heroContentTwo.querySelector('.hero-content-two-right');
+          const centerCol = heroContentTwo.querySelector('.hero-content-two-center');
+
+          if (desktop) {
+            if (centerCol) {
+              tl.fromTo(
+                centerCol,
+                { opacity: 0, scale: 0.9, filter: 'blur(6px)' },
+                { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.45, ease: 'power2.out' },
+                0.25
+              );
+            }
+            if (leftCol) {
+              tl.fromTo(
+                leftCol,
+                { opacity: 0, x: -40, filter: 'blur(6px)' },
+                { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.4, ease: 'power2.out' },
+                0.35
+              );
+            }
+            if (rightCol) {
+              tl.fromTo(
+                rightCol,
+                { opacity: 0, x: 40, filter: 'blur(6px)' },
+                { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.4, ease: 'power2.out' },
+                0.35
+              );
+            }
+          } else {
+            // Mobile entrance - center video element fades in
+            if (centerCol) {
+              tl.fromTo(
+                centerCol,
+                { opacity: 0, scale: 0.95, y: 30 },
+                { opacity: 1, scale: 1, y: 0, duration: 0.45, ease: 'power2.out' },
+                0.25
+              );
+            }
+          }
+        }
+
+        if (heroScene) {
+          const slow = heroScene.querySelector('.scene-parallax-slow');
+          if (slow) {
+            tl.to(slow, { y: -60, opacity: 0.05, duration: 0.4, ease: 'power1.in' }, 0);
+          }
+        }
+
+        ScrollTrigger.create({
+          trigger: hero,
+          start: 'top top',
+          end: 'bottom top', // Exactly 80vh of scroll when Section 1 leaves the viewport
+          scrub: 0.8,
+          animation: tl,
+          invalidateOnRefresh: true,
+        });
+
+        // 2nd ScrollTrigger: Section 2 (Features) -> Section 3 (About)
+        // Animates canvas to translate up off-screen while performing a second 360-degree forward tumble!
+        const tl2 = gsap.timeline({
+          defaults: { ease: 'none' }
+        });
+
+        tl2.to('.can-canvas', {
+          yPercent: -100,
+          duration: 1,
+        }, 0);
+
+        tl2.to(scrollState.can, {
+          rotX: (desktop ? (-5 + 720) : (-4 + 720)) * DEG, // Second full 360-degree tumble!
+          duration: 1,
+        }, 0);
+
+        ScrollTrigger.create({
+          trigger: '#features',
+          start: 'top top',
+          end: 'bottom top', // Exactly 100vh of natural scroll when Section 2 leaves the viewport
+          scrub: 0.8,
+          animation: tl2,
+          invalidateOnRefresh: true,
+        });
       }
     }
   );
 
   return () => mm.revert();
-
-  function setupChoreography(tl: gsap.core.Timeline, isDesktop: boolean) {
-    if (heroContent) {
-      tl.fromTo(
-        heroContent,
-        { opacity: 1, y: 0 },
-        { opacity: 0, y: -80, duration: 0.35, ease: 'power2.in' },
-        isDesktop ? 0.42 : 0.35
-      );
-    }
-
-    const storyReveals = story?.querySelectorAll('.story-reveal');
-    if (storyReveals?.length) {
-      tl.fromTo(
-        storyReveals,
-        { opacity: 0, y: 48, x: -20 },
-        {
-          opacity: 1,
-          y: 0,
-          x: 0,
-          duration: 0.38,
-          stagger: 0.08,
-          ease: 'power3.out',
-        },
-        isDesktop ? 0.58 : 0.5
-      );
-    }
-
-    if (heroScene) {
-      const slow = heroScene.querySelector('.scene-parallax-slow');
-      if (slow) {
-        tl.to(
-          slow,
-          { y: -80, opacity: 0.08, duration: 0.45, ease: 'power1.in' },
-          0
-        );
-      }
-      const mid = heroScene.querySelector('.scene-parallax-mid');
-      if (mid) {
-        tl.to(
-          mid,
-          { y: -140, opacity: 0.04, duration: 0.5, ease: 'power1.in' },
-          0.05
-        );
-      }
-      const sweep = heroScene.querySelector('.hero-light-sweep');
-      if (sweep) {
-        tl.to(
-          sweep,
-          { opacity: 0, x: '-15%', duration: 0.35, ease: 'power2.in' },
-          0.12
-        );
-      }
-    }
-
-    if (storyScene) {
-      tl.fromTo(storyScene, { opacity: 0.7 }, { opacity: 1, duration: 0.35 }, 0.55);
-    }
-
-    ScrollTrigger.create({
-      trigger: hero,
-      start: 'top top',
-      end: isDesktop ? '+=55%' : '+=35%',
-      pin: true,
-      pinSpacing: true,
-      scrub: 0.85,
-      anticipatePin: 1,
-      animation: tl,
-      invalidateOnRefresh: true,
-    });
-  }
 }

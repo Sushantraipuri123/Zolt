@@ -1,12 +1,11 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGSAP } from '@gsap/react';
 import SmoothScroll from '@/components/SmoothScroll';
-import CinematicScene from '@/components/landing/CinematicScene';
 import HeroSection from '@/components/landing/HeroSection';
-import StorySection from '@/components/landing/StorySection';
+import FeaturesSection from '@/components/landing/FeaturesSection';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { createHeroIntro } from '@/lib/animations/heroIntro';
 import { createScrollChoreography3d } from '@/lib/animations/scrollChoreography3d';
@@ -20,105 +19,184 @@ export default function LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
   const heroContentRef = useRef<HTMLDivElement>(null);
-  const heroSceneRef = useRef<HTMLDivElement>(null);
-  const storyRef = useRef<HTMLElement>(null);
-  const storySceneRef = useRef<HTMLDivElement>(null);
+  const heroContentTwoRef = useRef<HTMLDivElement>(null);
+  const scrollCueRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   const reducedMotion = usePrefersReducedMotion();
+  
   const [canvasMounted, setCanvasMounted] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Set mounted state on client to prevent any hydration mismatch
+  // States for Rotate Zolt click micro-interaction
+  const [rotate, setRotate] = useState(false);
+  const [videoActive, setVideoActive] = useState(false);
+
   useEffect(() => {
     setMounted(true);
+    // Diminish initial loader screen after 1.1s
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1100);
+    return () => clearTimeout(timer);
   }, []);
+
+  // Handle click to rotate can and play sound + video splash
+  const handleRotateClick = () => {
+    setRotate(true);
+
+    // 1. Play splash water video inside the rounded card
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().then(() => {
+        setVideoActive(true);
+      }).catch((err) => {
+        console.log('Video autoplay blocked:', err);
+      });
+    }
+
+    // 2. Play Soda Opening audio sound effect
+    try {
+      const audio = new Audio('https://hydroflowdrink.com/audio/sodaopening.mp3');
+      audio.volume = 0.55;
+      audio.play().catch((err) => {
+        console.log('Audio playback blocked by user interaction restrictions:', err);
+      });
+    } catch (e) {
+      console.log('Audio failed to play:', e);
+    }
+  };
+
+  // Turn off active video frame highlight when video ends
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleEnded = () => {
+      setVideoActive(false);
+    };
+
+    video.addEventListener('ended', handleEnded);
+    return () => {
+      video.removeEventListener('ended', handleEnded);
+    };
+  }, [canvasMounted]);
 
   useGSAP(
     () => {
-      if (!heroRef.current) return;
-      if (!canvasMounted) return;
+      if (!heroRef.current || !canvasMounted || loading) return;
 
+      // Launch the entrance animation
       createHeroIntro(rootRef.current);
 
       if (!reducedMotion) {
-        const cleanup = createScrollChoreography3d({
+        // Setup GSAP scroll trigger choreography
+        const cleanupScroll = createScrollChoreography3d({
           hero: heroRef.current,
           heroContent: heroContentRef.current ?? undefined,
-          heroScene: heroSceneRef.current ?? undefined,
-          story: storyRef.current ?? undefined,
-          storyScene: storySceneRef.current ?? undefined,
+          heroContentTwo: heroContentTwoRef.current ?? undefined,
+          scrollCue: scrollCueRef.current?.querySelector('.hero-scroll-cue') as HTMLElement | undefined,
         });
 
-        return cleanup;
+        return () => {
+          cleanupScroll();
+        };
       }
 
-      gsap.set('.story-reveal', { opacity: 1, y: 0, x: 0 });
+      // Reduced motion fallback states
       gsap.set('.can-canvas', { opacity: 1 });
+      gsap.set('.hero-content-two', { opacity: 1 });
+      gsap.set('.hero-scroll-cue', { opacity: 0 });
     },
-    { scope: rootRef, dependencies: [reducedMotion, canvasMounted] }
+    { scope: rootRef, dependencies: [reducedMotion, canvasMounted, loading] }
   );
 
   return (
     <SmoothScroll>
-      <div ref={rootRef}>
-        {/* Floating Premium Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-5 md:px-12 bg-transparent backdrop-blur-md border-b border-white/[0.02]">
-          <div className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#6b8cff] shadow-[0_0_8px_rgba(107,140,255,0.8)] animate-pulse" />
-            <span className="text-[10px] font-bold tracking-[0.4em] uppercase text-foreground ml-1">
-              ZOLT
-            </span>
+      <div ref={rootRef} className="relative w-full">
+        
+        {/* Navigation Bar */}
+        <div className="navigation">
+          <div className="navigation-left">
+            <p>ZOLT</p>
           </div>
-          
-          <nav className="hidden md:flex items-center gap-8 text-[9px] font-bold tracking-[0.25em] uppercase text-muted">
-            <a href="#" className="hover:text-foreground transition-colors">FORMULATION</a>
-            <a href="#story" className="hover:text-foreground transition-colors font-medium">PERFORMANCE</a>
-            <a href="#" className="hover:text-foreground transition-colors">PURITY</a>
-          </nav>
-          
-          <div>
-            <a 
-              href="#" 
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.02] px-5 py-2.5 text-[9px] font-bold tracking-widest uppercase text-foreground hover:bg-[#6b8cff]/10 hover:border-[#6b8cff]/30 transition-all duration-300"
-            >
-              ORDER NOW
-            </a>
+          <div className="navigation-center">
+            <a href="#home" className="navigation-description">Home</a>
+            <a href="#about" className="navigation-description">About</a>
+            <a href="#testimonials" className="navigation-description">Testimonials</a>
+            <a href="#faq" className="navigation-description">FAQ</a>
           </div>
-        </header>
+          <div className="navigation-right">
+            <div className="navigation-right-button">
+              <p>Coming Soon</p>
+            </div>
+          </div>
+        </div>
 
-        {/* Premium Technical Grid Backdrop */}
-        <div 
-          className="pointer-events-none fixed inset-0 z-0 opacity-12"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
-            `,
-            backgroundSize: '64px 64px',
-          }}
-        />
+        {/* Monogram Tech Loading Screen */}
+        {mounted && (
+          <div className={`initial-loading-screen ${!loading ? 'fade-out' : ''}`}>
+            <h1 className="gradient-text">ZOLT</h1>
+          </div>
+        )}
 
-        {mounted && <CanCanvas onMount={() => setCanvasMounted(true)} />}
-        <main
-          className="relative bg-[#030303] text-foreground overflow-x-hidden animate-fade-in"
-        >
+        {/* 3D Canvas Layer Context */}
+        {mounted && (
+          <CanCanvas
+            rotate={rotate}
+            setRotate={setRotate}
+            onMount={() => setCanvasMounted(true)}
+          />
+        )}
+
+        {/* Main Dark Grid container wrapping sections */}
+        <main className="background-container text-foreground min-h-screen pt-20">
+          
+          {/* Section 1: Hero (Stage 1) - Natural 80vh height */}
           <section
             ref={heroRef}
-            className="relative h-[100dvh] w-full overflow-hidden"
+            id="home"
+            className="hero w-full h-[80vh] relative overflow-hidden"
           >
-            <CinematicScene ref={heroSceneRef} variant="hero" />
-            <div ref={heroContentRef} className="relative h-full">
-              <HeroSection />
+            <div className="hero-absolute">
+              <HeroSection
+                heroContentRef={heroContentRef}
+                scrollCueRef={scrollCueRef}
+              />
             </div>
           </section>
 
+          {/* Section 2: Features (Stage 2) - Natural 100vh height */}
           <section
-            id="story"
-            ref={storyRef}
-            className="relative min-h-[100dvh] w-full overflow-hidden border-t border-white/[0.04]"
+            id="features"
+            className="features w-full h-[100vh] relative overflow-hidden"
           >
-            <CinematicScene ref={storySceneRef} variant="story" />
-            <StorySection />
+            <FeaturesSection
+              heroContentTwoRef={heroContentTwoRef}
+              videoRef={videoRef}
+              onRotateClick={handleRotateClick}
+              videoActive={videoActive}
+            />
           </section>
+
+          {/* About Section */}
+          <section
+            id="about"
+            className="about w-full"
+          >
+            <div className="about-content">
+              <p className="description" style={{ color: 'var(--accent)' }}>About Zolt Energy</p>
+              <h1 className="at-headline">WELCOME TO ZOLT WHERE PERFORMANCE MEETS HYDRATION</h1>
+              <p className="about-description">
+                Here, we redefine energy for the modern world. Zolt combines sustained cognitive performance with
+                clean, electrolyte-balanced hydration, creating an invigorating experience that is as focused as it is
+                refreshing. Each sip represents an upgrade—clean energy, zero compromise, and absolute performance.
+                This is more than a drink; this is Zolt. Recharge your life. Outrun the moment.
+              </p>
+            </div>
+          </section>
+
         </main>
       </div>
     </SmoothScroll>

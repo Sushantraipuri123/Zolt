@@ -14,9 +14,11 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 interface CanSceneProps {
   mobile?: boolean;
   postFx?: boolean;
+  rotate?: boolean;
+  setRotate?: (val: boolean) => void;
 }
 
-export default function CanScene({ mobile = false, postFx = true }: CanSceneProps) {
+export default function CanScene({ mobile = false, postFx = true, rotate = false, setRotate }: CanSceneProps) {
   const canRig = useRef<Group>(null);
   const rimPoint = useRef<PointLight>(null);
   const rimSpot = useRef<SpotLight>(null);
@@ -24,6 +26,11 @@ export default function CanScene({ mobile = false, postFx = true }: CanSceneProp
   const pointer = useCanPointer(!mobile);
   const reducedMotion = usePrefersReducedMotion();
   const idlePhase = useRef(0);
+  const spinAccumulator = useRef(0);
+  
+  // Custom click rotation states
+  const clickSpin = useRef(0);
+  const isSpinning = useRef(false);
 
   useFrame((state, delta) => {
     lerpScrollDisplay(reducedMotion ? 1 : 0.1);
@@ -31,27 +38,48 @@ export default function CanScene({ mobile = false, postFx = true }: CanSceneProp
     const rig = canRig.current;
     if (!rig) return;
 
+    // Handle interactive 360-degree click rotation
+    if (rotate && !isSpinning.current) {
+      isSpinning.current = true;
+      clickSpin.current = 0;
+    }
+
+    if (isSpinning.current) {
+      const spinSpeed = (2 * Math.PI) / 1.0; // 360 degrees in 1.0 seconds
+      clickSpin.current += spinSpeed * delta;
+      if (clickSpin.current >= 2 * Math.PI) {
+        clickSpin.current = 0;
+        isSpinning.current = false;
+        setRotate?.(false);
+      }
+    }
+
     idlePhase.current += delta;
     const t = idlePhase.current;
-    const idleWeight = MathUtils.clamp(1 - scrollDisplay.progress * 1.4, 0, 1);
+    const progress = scrollDisplay.progress;
+    const idleWeight = MathUtils.clamp(1 - progress * 1.2, 0, 1);
 
-    const floatY = Math.sin(t * 0.9) * 0.06 * idleWeight;
-    const floatX = Math.sin(t * 0.55) * 0.02 * idleWeight;
-    const idleRotY = Math.sin(t * 0.35) * 0.06 * idleWeight;
-    const idleRotX = Math.sin(t * 0.5) * 0.04 * idleWeight;
+    const floatY = Math.sin(t * 1.1) * 0.035 * idleWeight;
+    const floatX = Math.sin(t * 0.7) * 0.015 * idleWeight;
+    const idleRotX = Math.sin(t * 0.6) * 0.025 * idleWeight;
 
-    const parallaxX = pointer.x * 0.12 * idleWeight;
-    const parallaxY = -pointer.y * 0.08 * idleWeight;
+    if (idleWeight > 0.02) {
+      spinAccumulator.current += delta * scrollDisplay.idleSpinY * idleWeight;
+    } else {
+      spinAccumulator.current *= 0.92;
+    }
+
+    const parallaxX = pointer.x * 0.1 * idleWeight;
+    const parallaxY = -pointer.y * 0.06 * idleWeight;
+    const idleSpin = idleWeight > 0.02 ? spinAccumulator.current : 0;
 
     const c = scrollDisplay.can;
-    rig.position.set(
-      c.x + floatX,
-      c.y + floatY,
-      c.z
-    );
+    const pulse = scrollDisplay.energyPulse;
+
+    rig.position.set(c.x + floatX + parallaxX * 0.3, c.y + floatY, c.z);
     rig.rotation.set(
-      c.rotX + idleRotX + parallaxY,
-      c.rotY + idleRotY + parallaxX,
+      c.rotX + idleRotX + parallaxY * 0.15,
+      c.rotY + idleSpin + parallaxX * 0.2 + clickSpin.current,
       c.rotZ
     );
     rig.scale.setScalar(c.scale);
@@ -61,9 +89,9 @@ export default function CanScene({ mobile = false, postFx = true }: CanSceneProp
     camera.lookAt(cam.targetX, cam.targetY, cam.targetZ);
     camera.updateProjectionMatrix();
 
-    const rim = scrollDisplay.rimIntensity;
-    if (rimPoint.current) rimPoint.current.intensity = 0.9 * rim;
-    if (rimSpot.current) rimSpot.current.intensity = 1.1 * rim;
+    const rim = scrollDisplay.rimIntensity * (1 + pulse * 0.4);
+    if (rimPoint.current) rimPoint.current.intensity = 0.85 * rim;
+    if (rimSpot.current) rimSpot.current.intensity = 1.0 * rim;
   });
 
   return (
@@ -72,8 +100,8 @@ export default function CanScene({ mobile = false, postFx = true }: CanSceneProp
       <pointLight
         ref={rimPoint}
         position={[-2.5, 1.5, 2]}
-        intensity={0.9}
-        color="#6b8cff"
+        intensity={0.85}
+        color="#00e5ff"
         distance={12}
       />
       <spotLight
@@ -81,11 +109,10 @@ export default function CanScene({ mobile = false, postFx = true }: CanSceneProp
         position={[3, 4, 1]}
         angle={0.35}
         penumbra={0.8}
-        intensity={1.1}
-        color="#a8c4ff"
+        intensity={1.0}
+        color="#6eb4ff"
       />
       <Atmosphere3D mobile={mobile} />
-
       <CanModel groupRef={canRig} />
       <PostEffects enabled={postFx && !mobile && !reducedMotion} />
     </>

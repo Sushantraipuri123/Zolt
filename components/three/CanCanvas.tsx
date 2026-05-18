@@ -8,9 +8,11 @@ import CanScene from './CanScene';
 interface CanCanvasProps {
   className?: string;
   onMount?: () => void;
+  rotate?: boolean;
+  setRotate?: (val: boolean) => void;
 }
 
-export default function CanCanvas({ className = '', onMount }: CanCanvasProps) {
+export default function CanCanvas({ className = '', onMount, rotate, setRotate }: CanCanvasProps) {
   const [mobile, setMobile] = useState(false);
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export default function CanCanvas({ className = '', onMount }: CanCanvasProps) {
 
   useEffect(() => {
     onMount?.();
-  }, []);
+  }, [onMount]);
 
   return (
     <>
@@ -42,26 +44,27 @@ export default function CanCanvas({ className = '', onMount }: CanCanvasProps) {
           style={{ background: 'transparent' }}
         >
           <Suspense fallback={null}>
-            <CanScene mobile={mobile} postFx={!mobile} />
+            <CanScene mobile={mobile} postFx={!mobile} rotate={rotate} setRotate={setRotate} />
           </Suspense>
         </Canvas>
       </div>
       <DreiLoader
         containerStyles={{
-          background: '#030303',
+          background: '#020202',
           zIndex: 30,
         }}
         barStyles={{
-          background: '#6b8cff',
-          height: '1px',
+          background: 'linear-gradient(90deg, #4d7cff, #00e5ff)',
+          height: '2px',
         }}
         dataStyles={{
-          color: '#737373',
+          color: '#6b6b6b',
           fontFamily: 'var(--font-geist-sans), system-ui, sans-serif',
           fontSize: '10px',
-          letterSpacing: '0.25em',
+          letterSpacing: '0.35em',
           textTransform: 'uppercase',
         }}
+        dataInterpolation={(p) => `CHARGING ${Math.round(p)}%`}
       />
     </>
   );

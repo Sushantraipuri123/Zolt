@@ -1,57 +1,74 @@
 'use client';
 
-import { motion } from 'motion/react';
-import { landingCopy } from '@/content/landing';
+import React from 'react';
+import ScrollCue from './ScrollCue';
 
-export default function HeroSection() {
-  const { hero } = landingCopy;
-  const [line1, line2] = hero.heading.split(' ').reduce<[string, string]>(
-    (acc, word, i, arr) => {
-      const mid = Math.ceil(arr.length / 2);
-      if (i < mid) acc[0] += (acc[0] ? ' ' : '') + word;
-      else acc[1] += (acc[1] ? ' ' : '') + word;
-      return acc;
-    },
-    ['', '']
-  );
+interface HeroSectionProps {
+  heroContentRef: React.RefObject<HTMLDivElement | null>;
+  scrollCueRef: React.RefObject<HTMLDivElement | null>;
+}
 
+export default function HeroSection({
+  heroContentRef,
+  scrollCueRef,
+}: HeroSectionProps) {
   return (
-    <div className="relative z-10 flex h-full items-center px-6 md:px-12 lg:px-16">
-      <div className="hero-copy pointer-events-auto relative max-w-[min(92vw,620px)] pt-24 md:max-w-[min(92vw,720px)] md:pt-0 lg:pr-12">
-        <p className="hero-reveal-label mb-6 opacity-0 text-[10px] font-medium uppercase tracking-[0.2em] text-muted md:text-[11px]">
-          {hero.label}
-        </p>
+    <div className="relative w-full">
+      {/* STAGE 1: Centered Brand Title & Partner Logos */}
+      <div ref={heroContentRef} className="hero-content pointer-events-none w-full">
+        <div className="hero-text-contents">
+          <h1 className="text-behind opacity-blur">
+            ZOLT
+          </h1>
+          <div className="dottedLine opacity-blur">
+            <svg viewBox="0 0 800 1" preserveAspectRatio="none">
+              <line className="cls-1" y1="0.5" x2="800" y2="0.5" />
+            </svg>
+          </div>
+          <h1 className="text-front opacity-blur">
+            ENERGY
+          </h1>
+          <h2 className="title-description opacity-blur mt-4">
+            Clean power. Zero crash. Built for those who outrun the moment.
+          </h2>
+        </div>
 
-        <h1 className="overflow-hidden">
-          <span className="hero-reveal-line block opacity-0 text-[clamp(3rem,11vw,7.5rem)] font-semibold leading-[0.92] tracking-[-0.03em] text-foreground bg-gradient-to-r from-white via-white to-white/80 bg-clip-text text-transparent">
-            {line1}
-          </span>
-          <span className="hero-reveal-line block opacity-0 text-[clamp(3rem,11vw,7.5rem)] font-bold leading-[0.92] tracking-[-0.03em] bg-gradient-to-r from-[#6b8cff] to-[#a8c4ff] bg-clip-text text-transparent filter drop-shadow-[0_2px_30px_rgba(107,140,255,0.35)]">
-            {line2}
-          </span>
-        </h1>
+        {/* Partners Marquee Bar */}
+        <div className="hero-content-bottom pointer-events-auto">
+          <div className="hero-content-bottom-container">
+            <div className="hero-content-bottom-item hero-content-bottom-item-first">
+              <div className="hero-content-bottom-item-content opacity-blur">
+                <img src="/images/chainlink.svg" className="hero-content-bottom-item-image" alt="Chainlink" />
+              </div>
+            </div>
+            <div className="hero-content-bottom-item">
+              <div className="hero-content-bottom-item-content opacity-blur">
+                <img src="/images/tron.svg" className="hero-content-bottom-item-image" alt="TRON" />
+              </div>
+            </div>
+            <div className="hero-content-bottom-item hero-content-bottom-item-mobile-hiden">
+              <div className="hero-content-bottom-item-content opacity-blur">
+                <img src="/images/bnb.svg" className="hero-content-bottom-item-image" alt="BNB" />
+              </div>
+            </div>
+            <div className="hero-content-bottom-item">
+              <div className="hero-content-bottom-item-content opacity-blur">
+                <img src="/images/okx.svg" className="hero-content-bottom-item-image" alt="OKX" />
+              </div>
+            </div>
+            <div className="hero-content-bottom-item hero-content-bottom-item-last">
+              <div className="hero-content-bottom-item-content opacity-blur">
+                <img src="/images/chainlink.svg" className="hero-content-bottom-item-image" alt="Chainlink" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <p className="hero-reveal-sub mt-8 max-w-md opacity-0 text-sm font-light leading-relaxed text-muted md:mt-10 md:text-base">
-          {hero.sub}
-        </p>
-
-        <motion.a
-          href="#story"
-          className="hero-reveal-cta group mt-10 inline-flex opacity-0 items-center gap-3 rounded-full border border-white/10 bg-white/[0.02] px-8 py-4 text-xs font-semibold tracking-widest uppercase text-foreground transition-all duration-300 hover:border-[#6b8cff]/40 hover:bg-[#6b8cff]/10 md:mt-12"
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-[#6b8cff] shadow-[0_0_12px_rgba(107,140,255,0.85)] animate-pulse" />
-          {hero.cta}
-        </motion.a>
-
-        {/* Decorative accent line */}
-        <div
-          className="hero-reveal-accent mt-16 h-px w-24 origin-left scale-x-0 bg-gradient-to-r from-[#6b8cff]/60 to-transparent opacity-0"
-          aria-hidden
-        />
+      {/* Scroll cue chevron */}
+      <div ref={scrollCueRef} className="pointer-events-none">
+        <ScrollCue className="hero-scroll-cue" />
       </div>
     </div>
   );
 }
-

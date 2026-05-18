@@ -13,7 +13,7 @@ export function useCanPointer(enabled = true) {
   useEffect(() => {
     if (!enabled) return;
 
-    const mm = window.matchMedia('(min-width: 768px)');
+    const mm = window.matchMedia('(min-width: 1024px)');
     if (!mm.matches) return;
 
     const onMove = (e: MouseEvent) => {
