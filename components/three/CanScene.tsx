@@ -32,6 +32,10 @@ export default function CanScene({ mobile = false, postFx = true, rotate = false
   const clickSpin = useRef(0);
   const isSpinning = useRef(false);
 
+  // Smooth interactive mouse references for high-fidelity inertia
+  const smoothMouseX = useRef(0);
+  const smoothMouseY = useRef(0);
+
   useFrame((state, delta) => {
     lerpScrollDisplay(reducedMotion ? 1 : 0.1);
 
@@ -69,17 +73,28 @@ export default function CanScene({ mobile = false, postFx = true, rotate = false
       spinAccumulator.current *= 0.92;
     }
 
-    const parallaxX = pointer.x * 0.1 * idleWeight;
-    const parallaxY = -pointer.y * 0.06 * idleWeight;
+    // Ultra-smooth lerping of mouse pointer coordinates for inertia tracking
+    smoothMouseX.current = MathUtils.lerp(smoothMouseX.current, pointer.x, 0.08);
+    smoothMouseY.current = MathUtils.lerp(smoothMouseY.current, pointer.y, 0.08);
+
+    const activeMouseX = smoothMouseX.current * idleWeight;
+    const activeMouseY = smoothMouseY.current * idleWeight;
+
+    // High-fidelity interactive tilting, panning, and rotations in the Hero section
+    const mouseRotY = activeMouseX * 0.7;   // Up to ~40 degrees left/right horizontal tilt
+    const mouseRotX = -activeMouseY * 0.35; // Up to ~20 degrees up/down vertical tilt
+    const mousePosX = activeMouseX * 0.15;   // Subtle premium translation on X
+    const mousePosY = -activeMouseY * 0.1;   // Subtle premium translation on Y
+
     const idleSpin = idleWeight > 0.02 ? spinAccumulator.current : 0;
 
     const c = scrollDisplay.can;
     const pulse = scrollDisplay.energyPulse;
 
-    rig.position.set(c.x + floatX + parallaxX * 0.3, c.y + floatY, c.z);
+    rig.position.set(c.x + floatX + mousePosX, c.y + floatY + mousePosY, c.z);
     rig.rotation.set(
-      c.rotX + idleRotX + parallaxY * 0.15,
-      c.rotY + idleSpin + parallaxX * 0.2 + clickSpin.current,
+      c.rotX + idleRotX + mouseRotX,
+      c.rotY + idleSpin + mouseRotY + clickSpin.current,
       c.rotZ
     );
     rig.scale.setScalar(c.scale);

@@ -1,10 +1,15 @@
 import { gsap } from '@/lib/gsap';
 import { scrollState } from '@/lib/three/scrollState';
 
+/**
+ * Creates the high-voltage cinematic entrance sequence for Zolt.
+ * Coordinates 4 sequential canvas fractal lightning reveals followed by a majestic, liquid-smooth
+ * Can scale-up and HUD swell, completely matched to the center content animation and resolved within 4.0s.
+ */
 export function createHeroIntro(container?: HTMLElement | null) {
   const tl = gsap.timeline({
     defaults: { ease: 'power3.out' },
-    delay: 0.15,
+    delay: 0.05,
   });
 
   const q = (selector: string) =>
@@ -22,71 +27,96 @@ export function createHeroIntro(container?: HTMLElement | null) {
     }
   };
 
-  scrollState.bloomIntensity = 0.05;
+  // Determine responsive resting position matching scrollChoreography3d initial values
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  const targetScale = isDesktop ? 1.05 : 0.88;
+  const targetY = isDesktop ? 0.05 : -0.05;
+
+  // Initialize WebGL/3D states prior to Phase 1 trigger
+  scrollState.bloomIntensity = 0.28;
   scrollState.energyPulse = 0;
   scrollState.idleSpinY = 0;
 
-  // Cinematic bloom flare on launch
-  tl.to(scrollState, { bloomIntensity: 0.65, energyPulse: 1, duration: 0.35, ease: 'power2.in' }, 0.1);
-  tl.to(scrollState, { bloomIntensity: 0.28, energyPulse: 0, duration: 0.8, ease: 'power2.out' }, 0.45);
-  tl.to(scrollState, { idleSpinY: 0.15, duration: 0.6, ease: 'power2.out' }, 0.65);
+  // Keep the Can model immediately at its resting target coordinates to avoid scale jumps inside WebGL
+  scrollState.can.scale = targetScale; 
+  scrollState.can.y = targetY; 
+  scrollState.can.rotX = (isDesktop ? -5 : -4) * (Math.PI / 180);
 
-  // Fade and scale in the fixed Three.js canvas layer
+  // Set the 3D Canvas element scale to 0.9 and opacity to 0 immediately at the start of the page load
+  gsap.set('.can-canvas', { opacity: 0, scale: 0.9 });
+
+  // ----------------------------------------------------
+  // LIGHTNING STRIKE 1: REVEAL TOP-LEFT HEADING (0.1s)
+  // ----------------------------------------------------
+  tl.add(() => {
+    if (typeof window !== 'undefined' && (window as any).zoltStrikeMenuLink) {
+      (window as any).zoltStrikeMenuLink(0);
+    }
+  }, 0.1);
+
+  // ----------------------------------------------------
+  // LIGHTNING STRIKE 2: REVEAL BOTTOM-LEFT HEADING (0.7s)
+  // ----------------------------------------------------
+  tl.add(() => {
+    if (typeof window !== 'undefined' && (window as any).zoltStrikeMenuLink) {
+      (window as any).zoltStrikeMenuLink(1);
+    }
+  }, 0.7);
+
+  // ----------------------------------------------------
+  // LIGHTNING STRIKE 3: REVEAL TOP-RIGHT HEADING (1.3s)
+  // ----------------------------------------------------
+  tl.add(() => {
+    if (typeof window !== 'undefined' && (window as any).zoltStrikeMenuLink) {
+      (window as any).zoltStrikeMenuLink(2);
+    }
+  }, 1.3);
+
+  // ----------------------------------------------------
+  // LIGHTNING STRIKE 4: REVEAL BOTTOM-RIGHT HEADING (1.9s)
+  // ----------------------------------------------------
+  tl.add(() => {
+    if (typeof window !== 'undefined' && (window as any).zoltStrikeMenuLink) {
+      (window as any).zoltStrikeMenuLink(3);
+    }
+  }, 1.9);
+
+  // ----------------------------------------------------
+  // THE GRACEFUL UNISON REVEAL (2.4s)
+  // Both the 3D Can canvas container and the Center HUD scale and fade up in perfect visual harmony.
+  // No lightning or flashes around the Can.
+  // ----------------------------------------------------
+
+  // 1. Can Canvas Fade & Scale Up: matches center-content exactly (starts at scale 0.9, ends at 1.0)
   safeFromTo(
     '.can-canvas',
-    { opacity: 0 },
-    { opacity: 1, duration: 1.2, ease: 'power2.inOut' },
-    0.1
+    { opacity: 0, scale: 0.9 },
+    {
+      opacity: 1,
+      scale: 1,
+      duration: 2.2, // Increased for ultimate slow, buttery cinematic sweep!
+      ease: 'expo.out', // Identical smooth exponential cushion ease!
+      onStart: () => {
+        // Activate standard idle spin once scale begins
+        scrollState.idleSpinY = isDesktop ? 0.15 : 0.12;
+      }
+    },
+    2.4
   );
 
-  // Animate Stage 1 main monogram headers
-  safeFromTo(
-    '.text-behind',
-    { opacity: 0, y: 35, filter: 'blur(8px)' },
-    { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.1 },
-    0.25
-  );
+  // 2. Fade up the System Online HUD underneath
+  tl.add(() => {
+    if (typeof window !== 'undefined' && (window as any).zoltRevealCenterContent) {
+      (window as any).zoltRevealCenterContent();
+    }
+  }, 2.4);
 
-  safeFromTo(
-    '.text-front',
-    { opacity: 0, y: 35, filter: 'blur(8px)' },
-    { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.1 },
-    0.35
-  );
-
-  // Expand the orange dashed line from center
-  safeFromTo(
-    '.dottedLine',
-    { opacity: 0, scaleX: 0 },
-    { opacity: 1, scaleX: 1, duration: 1.2 },
-    0.3
-  );
-
-  // Fade in the tech description subtitle
-  safeFromTo(
-    '.title-description',
-    { opacity: 0, y: 15, filter: 'blur(6px)' },
-    { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.8, ease: 'sine.out' },
-    0.6
-  );
-
-  // Staggered partners marquee pills entrance
-  const partnerItems = q('.hero-content-bottom-item-content');
-  if (partnerItems.length) {
-    tl.fromTo(
-      partnerItems,
-      { opacity: 0, y: 20, filter: 'blur(6px)' },
-      { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.8, stagger: 0.1, ease: 'power2.out' },
-      0.7
-    );
-  }
-
-  // Fade in scroll cue chevron
+  // 3. Fade in scroll cue chevron
   safeFromTo(
     '.hero-scroll-cue',
     { opacity: 0, y: 10 },
     { opacity: 1, y: 0, duration: 0.8 },
-    1.1
+    3.0
   );
 
   return tl;

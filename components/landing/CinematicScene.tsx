@@ -3,12 +3,13 @@ import { gsap } from '@/lib/gsap';
 
 interface CinematicSceneProps {
   variant?: 'hero' | 'story';
+  active?: boolean;
 }
 
 const PARTICLE_COUNT = 24;
 
 const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
-  function CinematicScene({ variant = 'hero' }, ref) {
+  function CinematicScene({ variant = 'hero', active = false }, ref) {
     const innerRef = useRef<HTMLDivElement>(null);
     const lightningRef = useRef<SVGSVGElement>(null);
     const ambientFlashRef = useRef<HTMLDivElement>(null);
@@ -19,10 +20,12 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
       const flash = ambientFlashRef.current;
       if (!root) return;
 
+      const shouldStrike = variant === 'story' || active;
+
       const ctx = gsap.context(() => {
-        // High-voltage double electrical lightning discharge on render
-        if (lightning && flash) {
-          const lt = gsap.timeline({ delay: 0.4 });
+        // High-voltage double electrical lightning discharge
+        if (shouldStrike && lightning && flash) {
+          const lt = gsap.timeline({ delay: 0.15 });
           
           // First strike (rapid triple-flicker)
           lt.to(lightning, { opacity: 0.85, duration: 0.03 })
@@ -76,7 +79,7 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
       });
 
       return () => ctx.revert();
-    }, [variant]);
+    }, [variant, active]);
 
     const isHero = variant === 'hero';
 

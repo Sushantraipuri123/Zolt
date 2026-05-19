@@ -35,7 +35,7 @@ export default function FeaturesSection({
         </div>
 
         {/* Center Video Card with mobile controls */}
-        <div className="hero-content-two-center flex items-center justify-center">
+        <div className="hero-content-two-center flex items-center justify-center ">
           <video
             ref={videoRef}
             className={`hero-content-two-center-video ${videoActive ? 'active' : ''}`}
