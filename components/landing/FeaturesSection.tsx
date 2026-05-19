@@ -16,9 +16,9 @@ export default function FeaturesSection({
   videoActive,
 }: FeaturesSectionProps) {
   return (
-    <div className="relative w-full">
+    <div className=" w-full  h-dvh">
       {/* STAGE 2: Product Columns & Video Showcase */}
-      <div ref={heroContentTwoRef} className="hero-content hero-content-two pointer-events-auto w-full">
+      <div ref={heroContentTwoRef} className="hero-content hero-content-two pointer-events-auto w-full ">
         {/* Left Column: Ingredients */}
         <div className="hero-content-two-left">
           <div className="hero-content-two-item">
@@ -39,8 +39,9 @@ export default function FeaturesSection({
           <video
             ref={videoRef}
             className={`hero-content-two-center-video ${videoActive ? 'active' : ''}`}
-            src="/videos/water4.mp4#t=0.1"
+            src="/videos/water4.mp4"
             playsInline
+            autoPlay
             muted
             loop
           />

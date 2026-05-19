@@ -46,7 +46,7 @@ body {
 /* Premium Dark Cyber Grid */
 .background-container {
   background-color: var(--background);
-  background-image: 
+  background-image:
     linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 0),
     linear-gradient(180deg, rgba(255, 255, 255, 0.035) 1px, transparent 0);
   background-size: 2.5vw 2.5vw;
@@ -157,7 +157,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: 
+  background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 0) 0 0,
     linear-gradient(180deg, rgba(255, 255, 255, 0.04) 1px, transparent 0) 0 0;
   background-size: 2.5vw 2.5vw;
@@ -191,12 +191,14 @@ body {
 /* Two-Stage Hero Structure */
 .hero {
   position: relative;
-  height: 80vh; /* Standard 80vh height */
+  height: 80vh;
+  /* Standard 80vh height */
 }
 
 .features {
   position: relative;
-  height: 100vh; /* Standard 100vh height */
+  height: 86vh;
+  /* Fits card exactly (72vh + 14vh = 86vh) */
 }
 
 .hero-absolute {
@@ -204,7 +206,8 @@ body {
   top: 0;
   left: 0;
   width: 100%;
-  height: 80vh; /* Standard 80vh height */
+  height: 80vh;
+  /* Standard 80vh height */
   z-index: 10;
 }
 
@@ -229,7 +232,8 @@ body {
 }
 
 /* Huge Headline */
-.text-behind, .text-front {
+.text-behind,
+.text-front {
   font-family: var(--font-orbitron), sans-serif;
   font-size: 8.5vw;
   font-weight: 900;
@@ -279,6 +283,7 @@ body {
   0% {
     stroke-dashoffset: 100;
   }
+
   100% {
     stroke-dashoffset: 0;
   }
@@ -365,11 +370,11 @@ body {
 .hero-content-two {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 0 6vw;
+  padding: 14vh 6vw 0 6vw; /* 14vh top padding, 0 bottom padding */
   gap: 2.5vw;
-  height: 100vh;
+  /* Fits card exactly (72vh + 14vh = 86vh) */
 }
 
 .hero-content-two-left,
@@ -440,7 +445,8 @@ body {
   position: relative;
   overflow: hidden;
   box-shadow: 0 24px 50px rgba(0, 0, 0, 0.35);
-  z-index: 15; /* Sits behind can 3D overlay (z-index 20) but in front of canvas background */
+  z-index: 15;
+  /* Sits behind can 3D overlay (z-index 20) but in front of canvas background */
 }
 
 .hero-content-two-center-video {
@@ -452,11 +458,12 @@ body {
   object-fit: cover;
   opacity: 0;
   transition: opacity 0.8s ease;
-  mix-blend-mode: multiply; /* Renders rich dark water ripples over white canvas! */
+  mix-blend-mode: multiply;
+  /* Renders rich dark water ripples over white canvas! */
 }
 
 .hero-content-two-center-video.active {
-  opacity: 0.2;
+  opacity: 0.25;
 }
 
 .hero-content-two-center-button {
@@ -504,8 +511,9 @@ body {
 .about {
   background-color: #050505;
   overflow: hidden;
-  height: 100vh;
+  min-height: 100vh;
   position: relative;
+  z-index: 50; /* Overlays the z-20 CanCanvas */
   width: 100%;
   border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
@@ -515,11 +523,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* Align from top with generous padding */
   text-align: center;
   gap: 5vh;
   z-index: 2;
-  padding: 10vh 10vw;
+  padding: 24vh 10vw 10vh 10vw; /* Increased top padding to 24vh */
 }
 
 .about-description {
@@ -593,7 +601,8 @@ body {
     margin-top: -10vw;
   }
 
-  .text-behind, .text-front {
+  .text-behind,
+  .text-front {
     font-size: 10.5vw;
   }
 
@@ -682,5 +691,3 @@ body {
 .stroke-text {
   -webkit-text-stroke: 1px rgba(255, 255, 255, 0.7);
 }
-
-

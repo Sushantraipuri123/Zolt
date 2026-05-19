@@ -9,6 +9,8 @@ export interface ScrollChoreography3dElements {
   heroContentTwo?: HTMLElement;
   heroScene?: HTMLElement;
   scrollCue?: HTMLElement;
+  about?: HTMLElement;
+  story?: HTMLElement;
 }
 
 function setCan(
@@ -49,7 +51,7 @@ export function createScrollChoreography3d(
   elements: ScrollChoreography3dElements,
   reducedMotion = false
 ) {
-  const { hero, heroContent, heroContentTwo, heroScene, scrollCue } = elements;
+  const { hero, heroContent, heroContentTwo, heroScene, scrollCue, about, story } = elements;
 
   if (reducedMotion) {
     setCan(0, 0.04, 0.05, 8, 35, 0, 0.82);
@@ -294,30 +296,6 @@ export function createScrollChoreography3d(
           invalidateOnRefresh: true,
         });
 
-        // 2nd ScrollTrigger: Section 2 (Features) -> Section 3 (About)
-        // Animates canvas to translate up off-screen while performing a second 360-degree forward tumble!
-        const tl2 = gsap.timeline({
-          defaults: { ease: 'none' }
-        });
-
-        tl2.to('.can-canvas', {
-          yPercent: -100,
-          duration: 1,
-        }, 0);
-
-        tl2.to(scrollState.can, {
-          rotX: (desktop ? (-5 + 720) : (-4 + 720)) * DEG, // Second full 360-degree tumble!
-          duration: 1,
-        }, 0);
-
-        ScrollTrigger.create({
-          trigger: '#features',
-          start: 'top top',
-          end: 'bottom top', // Exactly 100vh of natural scroll when Section 2 leaves the viewport
-          scrub: 0.8,
-          animation: tl2,
-          invalidateOnRefresh: true,
-        });
       }
     }
   );

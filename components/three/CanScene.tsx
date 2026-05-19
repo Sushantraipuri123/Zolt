@@ -69,8 +69,6 @@ export default function CanScene({ mobile = false, postFx = true, rotate = false
 
     if (idleWeight > 0.02) {
       spinAccumulator.current += delta * scrollDisplay.idleSpinY * idleWeight;
-    } else {
-      spinAccumulator.current *= 0.92;
     }
 
     // Ultra-smooth lerping of mouse pointer coordinates for inertia tracking
@@ -86,7 +84,7 @@ export default function CanScene({ mobile = false, postFx = true, rotate = false
     const mousePosX = activeMouseX * 0.15;   // Subtle premium translation on X
     const mousePosY = -activeMouseY * 0.1;   // Subtle premium translation on Y
 
-    const idleSpin = idleWeight > 0.02 ? spinAccumulator.current : 0;
+    const idleSpin = spinAccumulator.current;
 
     const c = scrollDisplay.can;
     const pulse = scrollDisplay.energyPulse;
