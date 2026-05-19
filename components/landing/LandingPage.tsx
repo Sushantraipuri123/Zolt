@@ -6,7 +6,10 @@ import { useGSAP } from '@gsap/react';
 import SmoothScroll from '@/components/SmoothScroll';
 import HeroSection from '@/components/landing/HeroSection';
 import FeaturesSection from '@/components/landing/FeaturesSection';
-import StorySection from '@/components/landing/StorySection';
+import AdventureSection from '@/components/landing/AdventureSection';
+import GymSection from '@/components/landing/GymSection';
+import FormulaSection from '@/components/landing/FormulaSection';
+import CheckoutSection from '@/components/landing/CheckoutSection';
 import CinematicScene from '@/components/landing/CinematicScene';
 import AnimatedCounter from '@/components/landing/AnimatedCounter';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
@@ -26,7 +29,10 @@ export default function LandingPage() {
   const scrollCueRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const aboutRef = useRef<HTMLElement>(null);
-  const storyRef = useRef<HTMLElement>(null);
+  const adventureRef = useRef<HTMLElement>(null);
+  const gymRef = useRef<HTMLElement>(null);
+  const formulaRef = useRef<HTMLElement>(null);
+  const checkoutRef = useRef<HTMLElement>(null);
 
   const reducedMotion = usePrefersReducedMotion();
   
@@ -95,7 +101,10 @@ export default function LandingPage() {
           heroContent: heroContentRef.current ?? undefined,
           heroContentTwo: heroContentTwoRef.current ?? undefined,
           about: aboutRef.current ?? undefined,
-          story: storyRef.current ?? undefined,
+          adventure: adventureRef.current ?? undefined,
+          gym: gymRef.current ?? undefined,
+          formula: formulaRef.current ?? undefined,
+          checkout: checkoutRef.current ?? undefined,
           scrollCue: scrollCueRef.current?.querySelector('.hero-scroll-cue') as HTMLElement | undefined,
         });
 
@@ -302,13 +311,40 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* Story Section (Section 4) */}
+          {/* Section 4: Adventure (Stage 3) */}
           <section
-            ref={storyRef}
-            id="story"
-            className="story w-full"
+            ref={adventureRef}
+            id="adventure"
+            className="adventure w-full"
           >
-            <StorySection />
+            <AdventureSection />
+          </section>
+
+          {/* Section 5: Gym (Stage 4) */}
+          <section
+            ref={gymRef}
+            id="gym"
+            className="gym w-full"
+          >
+            <GymSection />
+          </section>
+
+          {/* Section 6: Formula (Stage 5) */}
+          <section
+            ref={formulaRef}
+            id="formula"
+            className="formula w-full"
+          >
+            <FormulaSection />
+          </section>
+
+          {/* Section 7: Checkout & Footer (Stage 6) */}
+          <section
+            ref={checkoutRef}
+            id="checkout"
+            className="checkout w-full"
+          >
+            <CheckoutSection />
           </section>
 
         </main>
