@@ -32,7 +32,7 @@ export default function GymSection() {
       
       {/* Industrial Gym Backdrop */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-45 pointer-events-none scale-105"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-100 pointer-events-none scale-105"
         style={{ 
           backgroundImage: "url('/images/gym_backdrop.png')",
           backgroundAttachment: 'fixed',
@@ -44,7 +44,7 @@ export default function GymSection() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:4vw_4vw] pointer-events-none" />
 
       {/* Extreme Vignette & Color Gradients */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-black/90 to-black pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-black/40 to-black pointer-events-none" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#00e5ff]/10 rounded-full blur-[160px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[var(--accent)]/10 rounded-full blur-[160px] pointer-events-none" />
 

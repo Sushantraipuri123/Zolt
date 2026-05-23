@@ -328,7 +328,7 @@ export function createScrollChoreography3d(
 
           if (desktop) {
             tlAdventure.to(scrollState.can, {
-              x: 0.42,
+              x: 0, // Centered perfectly between the left text and right specs
               y: 0.02,
               z: 0,
               rotX: 10 * DEG,
@@ -373,7 +373,7 @@ export function createScrollChoreography3d(
           // Accelerates and tumbles
           if (desktop) {
             tlGym.to(scrollState.can, {
-              x: -0.45,
+              x: -1.4, // Pushed further left into the empty layout column
               y: -0.05,
               z: 0.05,
               rotX: 5 * DEG,
@@ -451,7 +451,7 @@ export function createScrollChoreography3d(
           // Settles into perfect close-up logo angle next to buys
           if (desktop) {
             tlCheckout.to(scrollState.can, {
-              x: -0.52,
+              x: -1.5, // Pushed further left into the empty layout column
               y: -0.08,
               z: 0.1,
               rotX: 8 * DEG,
