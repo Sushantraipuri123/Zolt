@@ -10,6 +10,7 @@ import AdventureSection from '@/components/landing/AdventureSection';
 import GymSection from '@/components/landing/GymSection';
 import FormulaSection from '@/components/landing/FormulaSection';
 import CheckoutSection from '@/components/landing/CheckoutSection';
+import HorizontalGallery from '@/components/landing/HorizontalGallery';
 import CinematicScene from '@/components/landing/CinematicScene';
 import AnimatedCounter from '@/components/landing/AnimatedCounter';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
@@ -29,6 +30,7 @@ export default function LandingPage() {
   const scrollCueRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const aboutRef = useRef<HTMLElement>(null);
+  const horizontalGalleryRef = useRef<HTMLElement>(null);
   const adventureRef = useRef<HTMLElement>(null);
   const gymRef = useRef<HTMLElement>(null);
   const formulaRef = useRef<HTMLElement>(null);
@@ -101,6 +103,7 @@ export default function LandingPage() {
           heroContent: heroContentRef.current ?? undefined,
           heroContentTwo: heroContentTwoRef.current ?? undefined,
           about: aboutRef.current ?? undefined,
+          horizontalGallery: horizontalGalleryRef.current ?? undefined,
           adventure: adventureRef.current ?? undefined,
           gym: gymRef.current ?? undefined,
           formula: formulaRef.current ?? undefined,
@@ -309,6 +312,15 @@ export default function LandingPage() {
                 />
               </div>
             </div>
+          </section>
+
+          {/* Section 4: Horizontal Scroll Gallery */}
+          <section
+            ref={horizontalGalleryRef}
+            id="horizontal"
+            className="w-full relative overflow-hidden"
+          >
+            <HorizontalGallery />
           </section>
 
           {/* Section 4: Adventure (Stage 3) */}

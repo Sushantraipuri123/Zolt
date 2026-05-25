@@ -7,13 +7,14 @@ export interface ScrollChoreography3dElements {
   hero: HTMLElement;
   heroContent?: HTMLElement;
   heroContentTwo?: HTMLElement;
-  heroScene?: HTMLElement;
-  scrollCue?: HTMLElement;
   about?: HTMLElement;
+  horizontalGallery?: HTMLElement;
   adventure?: HTMLElement;
   gym?: HTMLElement;
   formula?: HTMLElement;
   checkout?: HTMLElement;
+  scrollCue?: HTMLElement;
+  heroScene?: HTMLElement;
 }
 
 function setCan(
@@ -57,14 +58,15 @@ export function createScrollChoreography3d(
   const { 
     hero, 
     heroContent, 
-    heroContentTwo, 
-    heroScene, 
-    scrollCue, 
-    about, 
+    heroContentTwo,
+    about,
+    horizontalGallery, 
     adventure, 
     gym, 
     formula, 
-    checkout 
+    checkout,
+    scrollCue,
+    heroScene
   } = elements;
 
   if (reducedMotion) {
@@ -75,6 +77,18 @@ export function createScrollChoreography3d(
     scrollState.bloomIntensity = 0.28;
     return () => { };
   }
+
+  // Global velocity tracker for dynamic Chromatic Aberration & DoF
+  ScrollTrigger.create({
+    trigger: document.body,
+    start: 'top top',
+    end: 'bottom bottom',
+    onUpdate: (self) => {
+      // Normalize velocity to a workable range (e.g., 0 to 1)
+      const rawVel = self.getVelocity();
+      scrollState.velocity = Math.min(Math.abs(rawVel / 3000), 1.0);
+    },
+  });
 
   const mm = gsap.matchMedia();
 
@@ -312,7 +326,175 @@ export function createScrollChoreography3d(
         });
 
         // ----------------------------------------------------
-        // Stage 3: About -> Adventure (Section 3 -> Section 4)
+        // Stage 3: About -> Horizontal Gallery Scroll Hijack
+        // ----------------------------------------------------
+        if (horizontalGallery) {
+          const track = horizontalGallery.querySelector('#horizontal-track') as HTMLElement;
+          const panels = horizontalGallery.querySelectorAll('.hg-panel');
+
+          if (track && panels.length > 0) {
+            const n = panels.length;
+            const seg = 1 / n;
+            const breathe =
+              typeof window !== 'undefined' ? window.innerHeight * (desktop ? 0.35 : 0.2) : 0;
+
+            const tlHorizontal = gsap.timeline({
+              defaults: { ease: 'none' },
+              scrollTrigger: {
+                trigger: horizontalGallery,
+                start: 'top top',
+                end: () => `+=${track.scrollWidth - window.innerWidth + breathe}`,
+                pin: true,
+                scrub: desktop ? 1.1 : 1.25,
+                invalidateOnRefresh: true,
+              },
+            });
+
+            // 1) Horizontal track — duration 1 maps to pin distance (extra scroll = slower read)
+            tlHorizontal.to(
+              track,
+              {
+                x: () => -(track.scrollWidth - window.innerWidth),
+                duration: 1,
+              },
+              0
+            );
+
+            // 2) Copy — slide in from right, settle, slide out left (x only; text stays visible in markup)
+            const slidePx = desktop ? 72 : 40;
+
+            panels.forEach((panel) => {
+              const copy = panel.querySelector('.hg-copy') as HTMLElement | null;
+              if (copy) {
+                gsap.set(copy, { x: slidePx, clearProps: 'filter,scale' });
+              }
+            });
+
+            panels.forEach((panel, i) => {
+              const copy = panel.querySelector('.hg-copy') as HTMLElement | null;
+              if (!copy) return;
+
+              const beatStart = i * seg;
+              const beatMid = beatStart + seg * 0.5;
+              const half = seg * 0.5;
+
+              tlHorizontal.fromTo(
+                copy,
+                { x: slidePx },
+                { x: 0, duration: half, ease: 'none' },
+                beatStart
+              );
+              tlHorizontal.fromTo(
+                copy,
+                { x: 0 },
+                { x: -slidePx, duration: half, ease: 'none' },
+                beatMid
+              );
+            });
+
+            const canPoses = [
+              {
+                x: 0.85,
+                y: 0.05,
+                z: 0.08,
+                rotX: 4 * DEG,
+                rotY: -38 * DEG,
+                rotZ: 0,
+                scale: 0.88,
+              },
+              {
+                x: 1.15,
+                y: 0.04,
+                z: 0.1,
+                rotX: 6 * DEG,
+                rotY: -52 * DEG,
+                rotZ: 4 * DEG,
+                scale: 0.86,
+              },
+              {
+                x: -1.05,
+                y: 0.05,
+                z: 0.11,
+                rotX: 9 * DEG,
+                rotY: 48 * DEG,
+                rotZ: -3 * DEG,
+                scale: 0.87,
+              },
+              {
+                x: 0.95,
+                y: -0.02,
+                z: 0.12,
+                rotX: 5 * DEG,
+                rotY: -95 * DEG,
+                rotZ: 6 * DEG,
+                scale: 0.9,
+              },
+              {
+                x: -0.55,
+                y: -0.06,
+                z: 0.14,
+                rotX: 7 * DEG,
+                rotY: -155 * DEG,
+                rotZ: -2 * DEG,
+                scale: 0.94,
+              },
+            ];
+
+            const camBeats = [
+              { z: 4.91, targetX: 0.018, targetY: 0.05 },
+              { z: 4.88, targetX: -0.015, targetY: 0.058 },
+              { z: 4.93, targetX: 0.035, targetY: -0.018 },
+              { z: 4.89, targetX: -0.028, targetY: 0.052 },
+              { z: 4.94, targetX: 0.02, targetY: 0.038 },
+            ];
+
+            const canLead = desktop ? 0.032 : 0.024;
+            const canSpan = seg + canLead * 2;
+
+            // 3) Can — phase-shift so each pose settles through the read window
+            canPoses.forEach((pose, i) => {
+              const start = Math.max(0, i * seg - canLead);
+              const dur = Math.min(canSpan, 1 - start - 0.002);
+              tlHorizontal.to(scrollState.can, { ...pose, duration: dur, ease: 'none' }, start);
+            });
+
+            // 4) Camera — small keyed nudges per beat (staggered windows, no heavy overlap)
+            camBeats.forEach((beat, i) => {
+              const t0 = i * seg + 0.018;
+              const dur = Math.min(seg * 0.76, 1 - t0 - 0.004);
+              tlHorizontal.to(scrollState.camera, { ...beat, duration: dur, ease: 'none' }, t0);
+            });
+
+            // 5) Rim / bloom — subtle punctuation on Zero + Ionic beat centers
+            const rimBase = scrollState.rimIntensity;
+            const bloomBase = scrollState.bloomIntensity;
+            const zeroMid = (1 + 0.5) * seg;
+            const ionMid = (n - 1 + 0.5) * seg;
+            tlHorizontal.to(
+              scrollState,
+              { rimIntensity: rimBase + 0.045, duration: 0.055, ease: 'none' },
+              Math.max(0.02, zeroMid - 0.04)
+            );
+            tlHorizontal.to(
+              scrollState,
+              { rimIntensity: rimBase, duration: 0.06, ease: 'none' },
+              zeroMid + 0.02
+            );
+            tlHorizontal.to(
+              scrollState,
+              { bloomIntensity: bloomBase + 0.04, duration: 0.05, ease: 'none' },
+              Math.max(0.02, ionMid - 0.05)
+            );
+            tlHorizontal.to(
+              scrollState,
+              { bloomIntensity: bloomBase, duration: 0.055, ease: 'none' },
+              ionMid + 0.025
+            );
+          }
+        }
+
+        // ----------------------------------------------------
+        // Stage 4: Horizontal Gallery -> Adventure
         // ----------------------------------------------------
         if (adventure) {
           const tlAdventure = gsap.timeline({

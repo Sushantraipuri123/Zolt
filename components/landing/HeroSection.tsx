@@ -176,7 +176,42 @@ export default function HeroSection({
 
   return (
     <div className="relative w-full min-h-screen flex flex-col items-center justify-center p-6 md:p-12 select-none pointer-events-none">
-      
+      {/* Atmospheric fog — soft-light reads on #020202; screen-blend did not (≈invisible on black) */}
+      <div
+        className="pointer-events-none absolute inset-0 z-[1] isolate overflow-hidden"
+        aria-hidden
+      >
+        {/* Skylight wash — thin “high cloud” band */}
+        <div
+          className="hero-fog-layer hero-fog-sky absolute inset-x-[-10%] -top-[8%] h-[48%] opacity-90 mix-blend-soft-light"
+          style={{
+            background:
+              'radial-gradient(ellipse 95% 70% at 50% 0%, rgba(185,215,255,0.22) 0%, rgba(0,200,230,0.08) 42%, transparent 72%)',
+          }}
+        />
+        <div
+          className="hero-fog-layer hero-fog-a absolute -left-[10%] top-[14%] h-[46vh] w-[58vw] rounded-full blur-[88px] mix-blend-soft-light opacity-[0.55]"
+          style={{
+            background:
+              'radial-gradient(ellipse at 42% 48%, rgba(245,250,255,0.35) 0%, rgba(0,210,240,0.12) 48%, transparent 72%)',
+          }}
+        />
+        <div
+          className="hero-fog-layer hero-fog-b absolute right-[-8%] top-[28%] h-[40vh] w-[52vw] rounded-full blur-[96px] mix-blend-soft-light opacity-[0.5]"
+          style={{
+            background:
+              'radial-gradient(ellipse at 58% 52%, rgba(130,185,255,0.28) 0%, rgba(0,160,200,0.08) 55%, transparent 74%)',
+          }}
+        />
+        <div
+          className="hero-fog-layer hero-fog-c absolute left-[6%] right-[6%] bottom-[4%] h-[30vh] blur-[110px] mix-blend-soft-light opacity-[0.45]"
+          style={{
+            background:
+              'radial-gradient(ellipse at 50% 100%, rgba(230,240,255,0.2) 0%, rgba(80,140,200,0.06) 45%, transparent 70%)',
+          }}
+        />
+      </div>
+
       {/* Fractal Lightning canvas overlay */}
       <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 z-40 h-full w-full" />
 

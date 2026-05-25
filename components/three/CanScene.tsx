@@ -63,9 +63,9 @@ export default function CanScene({ mobile = false, postFx = true, rotate = false
     const progress = scrollDisplay.progress;
     const idleWeight = MathUtils.clamp(1 - progress * 1.2, 0, 1);
 
-    const floatY = Math.sin(t * 1.1) * 0.035 * idleWeight;
-    const floatX = Math.sin(t * 0.7) * 0.015 * idleWeight;
-    const idleRotX = Math.sin(t * 0.6) * 0.025 * idleWeight;
+    const floatY = Math.sin(t * 1.1) * 0.042 * idleWeight;
+    const floatX = Math.sin(t * 0.7) * 0.02 * idleWeight;
+    const idleRotX = Math.sin(t * 0.6) * 0.032 * idleWeight;
 
     if (idleWeight > 0.02) {
       spinAccumulator.current += delta * scrollDisplay.idleSpinY * idleWeight;
@@ -98,13 +98,24 @@ export default function CanScene({ mobile = false, postFx = true, rotate = false
     rig.scale.setScalar(c.scale);
 
     const cam = scrollDisplay.camera;
-    camera.position.set(cam.x, cam.y, cam.z);
-    camera.lookAt(cam.targetX, cam.targetY, cam.targetZ);
+    const idleCamWeight = MathUtils.clamp(1 - progress * 1.15, 0, 1);
+    const camDriftX = Math.sin(t * 0.35) * 0.018 * idleCamWeight + Math.sin(t * 0.11) * 0.006 * idleCamWeight;
+    const camDriftY = Math.cos(t * 0.28) * 0.012 * idleCamWeight;
+    const camDriftZ = Math.sin(t * 0.19) * 0.022 * idleCamWeight;
+    camera.position.set(cam.x + camDriftX, cam.y + camDriftY, cam.z + camDriftZ);
+
+    const lookMicroX = Math.sin(t * 0.42) * 0.012 * idleCamWeight;
+    const lookMicroY = Math.cos(t * 0.33) * 0.01 * idleCamWeight;
+    camera.lookAt(cam.targetX + lookMicroX, cam.targetY + lookMicroY, cam.targetZ);
     camera.updateProjectionMatrix();
 
     const rim = scrollDisplay.rimIntensity * (1 + pulse * 0.4);
-    if (rimPoint.current) rimPoint.current.intensity = 0.85 * rim;
-    if (rimSpot.current) rimSpot.current.intensity = 1.0 * rim;
+    const breath = 1 + Math.sin(t * 0.72) * 0.07 + Math.sin(t * 0.31) * 0.04;
+    const rarePulse = Math.pow(Math.max(0, Math.sin(t * 0.095)), 9) * 0.28;
+    const scrollReact = 1 + Math.min(scrollDisplay.velocity, 1) * 0.22;
+    const rimMod = rim * breath * (1 + rarePulse) * scrollReact;
+    if (rimPoint.current) rimPoint.current.intensity = 0.85 * rimMod;
+    if (rimSpot.current) rimSpot.current.intensity = 1.0 * rimMod * (0.96 + Math.sin(t * 0.55) * 0.05);
   });
 
   return (

@@ -115,6 +115,17 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
           }}
         />
 
+        {/* Power core — very slow radial breathing behind scene center */}
+        {isHero && (
+          <div
+            className="pointer-events-none absolute left-1/2 top-[42%] z-0 h-[min(85vh,900px)] w-[min(95vw,900px)] -translate-x-1/2 -translate-y-1/2 opacity-40 mix-blend-screen hero-core-breathe"
+            style={{
+              background:
+                'radial-gradient(circle at 50% 50%, rgba(0,229,255,0.14) 0%, rgba(100,160,255,0.05) 35%, transparent 62%)',
+            }}
+          />
+        )}
+
         {/* Floor haze */}
         <div
           className="scene-parallax-fast absolute bottom-0 left-0 right-0 h-[45vh] opacity-50"
@@ -159,6 +170,23 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
             />
           ))}
         </div>
+
+        <div
+          data-smoke
+          className="absolute bottom-[12%] left-1/2 h-[38vh] w-[55vw] -translate-x-1/2 opacity-[0.07]"
+          style={{
+            background:
+              'radial-gradient(ellipse, rgba(200,255,255,0.06) 0%, transparent 72%)',
+          }}
+        />
+        <div
+          data-smoke
+          className="absolute top-[18%] right-[8%] h-[28vh] w-[38vw] opacity-[0.06]"
+          style={{
+            background:
+              'radial-gradient(ellipse, rgba(0,229,255,0.05) 0%, transparent 75%)',
+          }}
+        />
 
         {/* Vignette */}
         <div

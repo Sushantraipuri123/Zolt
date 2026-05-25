@@ -22,6 +22,7 @@ export const scrollState = {
   bloomIntensity: 0.25,
   energyPulse: 0,
   idleSpinY: 0.15,
+  velocity: 0,
 };
 
 export const scrollDisplay = {
@@ -32,6 +33,7 @@ export const scrollDisplay = {
   bloomIntensity: scrollState.bloomIntensity,
   energyPulse: scrollState.energyPulse,
   idleSpinY: scrollState.idleSpinY,
+  velocity: scrollState.velocity,
 };
 
 export function lerpScrollDisplay(factor: number) {
@@ -45,6 +47,8 @@ export function lerpScrollDisplay(factor: number) {
     (scrollState.energyPulse - scrollDisplay.energyPulse) * t;
   scrollDisplay.idleSpinY +=
     (scrollState.idleSpinY - scrollDisplay.idleSpinY) * t;
+  scrollDisplay.velocity +=
+    (scrollState.velocity - scrollDisplay.velocity) * t;
 
   (['x', 'y', 'z', 'rotX', 'rotY', 'rotZ', 'scale'] as const).forEach((k) => {
     scrollDisplay.can[k] += (scrollState.can[k] - scrollDisplay.can[k]) * t;
