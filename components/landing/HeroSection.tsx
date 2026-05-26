@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import { scrollState } from '@/lib/three/scrollState';
 import { gsap } from '@/lib/gsap';
 import ScrollCue from './ScrollCue';
@@ -32,6 +33,18 @@ export default function HeroSection({
   const activeBolts = useRef<LightningBolt[]>([]);
   const flashIntensity = useRef(0);
   const [isComplete, setIsComplete] = useState(false);
+  const reduceMotion = useReducedMotion();
+
+  const hudSpring = { type: 'spring' as const, stiffness: 420, damping: 28, mass: 0.85 };
+  /* Avoid translate/rotateX here — GSAP owns y/transform on these nodes during intro */
+  const cardHover = reduceMotion
+    ? {}
+    : {
+        scale: 1.018,
+        boxShadow: '0 0 48px rgba(0, 229, 255, 0.12), 0 0 2px rgba(255,255,255,0.06)',
+        transition: hudSpring,
+      };
+  const cardTap = reduceMotion ? {} : { scale: 0.99 };
 
   // --- RESIZE HANDLER ---
   useEffect(() => {
@@ -231,7 +244,9 @@ export default function HeroSection({
             className="opacity-0 translate-y-10 corner-card"
             data-corner="tl"
           >
-            <MenuLink index="01" label="ULTRA CAFFEINE" sub="Active Formulation" link="#caffeine" />
+            <motion.div whileHover={cardHover} whileTap={cardTap} className="inline-block">
+              <MenuLink index="01" label="ULTRA CAFFEINE" sub="Active Formulation" link="#caffeine" />
+            </motion.div>
           </div>
 
           {/* Item 02 / ZERO SUGAR */}
@@ -242,16 +257,32 @@ export default function HeroSection({
             className="opacity-0 translate-y-10 corner-card mt-8 md:mt-20"
             data-corner="bl"
           >
-            <MenuLink index="02" label="ZERO SUGAR" sub="Mitochondrial Burn" link="#sugar" />
+            <motion.div whileHover={cardHover} whileTap={cardTap} className="inline-block">
+              <MenuLink index="02" label="ZERO SUGAR" sub="Mitochondrial Burn" link="#sugar" />
+            </motion.div>
           </div>
         </div>
 
         {/* CENTER TITLE (Revealed after all strikes, in unison with 3D can fade up) */}
-        <div className="center-content opacity-0 scale-90 flex flex-col items-center text-center py-10 md:py-20 relative order-1 md:order-2 pointer-events-none">
+        <motion.div
+          className="center-content opacity-0 scale-90 flex flex-col items-center text-center py-10 md:py-20 relative order-1 md:order-2 pointer-events-none"
+          animate={
+            isComplete && !reduceMotion
+              ? {
+                  filter: [
+                    'drop-shadow(0 0 0px transparent)',
+                    'drop-shadow(0 0 24px rgba(0,229,255,0.25))',
+                    'drop-shadow(0 0 8px rgba(255,113,32,0.15))',
+                  ],
+                }
+              : {}
+          }
+          transition={{ duration: 2.8, ease: 'easeOut' }}
+        >
           <h1 className="text-[10px] font-bold tracking-[1.5em] text-zinc-600 uppercase mb-8">
             ZOLT
           </h1>
-        </div>
+        </motion.div>
 
         {/* RIGHT MENU (Strikes 3 & 4) */}
         <div className="flex flex-col gap-16 items-center md:items-end order-3 mt-10 md:mt-0 pointer-events-auto">
@@ -263,7 +294,9 @@ export default function HeroSection({
             className="opacity-0 translate-y-10 corner-card"
             data-corner="tr"
           >
-            <MenuLink index="03" label="HYDRATION" sub="Plasma Recovery" link="#hydration" />
+            <motion.div whileHover={cardHover} whileTap={cardTap} className="inline-block">
+              <MenuLink index="03" label="HYDRATION" sub="Plasma Recovery" link="#hydration" />
+            </motion.div>
           </div>
 
           {/* Item 04 / KINETIC FOCUS */}
@@ -274,7 +307,9 @@ export default function HeroSection({
             className="opacity-0 translate-y-10 corner-card mt-8 md:mt-20"
             data-corner="br"
           >
-            <MenuLink index="04" label="KINETIC " sub="Synapse Synthesis" link="#focus" />
+            <motion.div whileHover={cardHover} whileTap={cardTap} className="inline-block">
+              <MenuLink index="04" label="KINETIC " sub="Synapse Synthesis" link="#focus" />
+            </motion.div>
           </div>
         </div>
 
@@ -282,7 +317,7 @@ export default function HeroSection({
 
       {/* Bottom section with scroll cue chevron */}
       <div ref={scrollCueRef} className="pointer-events-none mt-auto pb-4 mx-auto z-20">
-        <ScrollCue className="hero-scroll-cue animate-pulse" />
+        <ScrollCue className="hero-scroll-cue" />
       </div>
     </div>
   );

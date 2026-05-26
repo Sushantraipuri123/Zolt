@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 
 interface FeaturesSectionProps {
   heroContentTwoRef: React.RefObject<HTMLDivElement | null>;
@@ -15,12 +16,37 @@ export default function FeaturesSection({
   onRotateClick,
   videoActive,
 }: FeaturesSectionProps) {
+  const reduceMotion = useReducedMotion();
+
+  const itemVariants = reduceMotion
+    ? { hidden: { opacity: 1, y: 0 }, show: { opacity: 1, y: 0 } }
+    : {
+        hidden: { opacity: 0, y: 28 },
+        show: {
+          opacity: 1,
+          y: 0,
+          transition: { type: 'spring' as const, stiffness: 320, damping: 32, mass: 0.9 },
+        },
+      };
+
   return (
     <div className=" w-full  h-dvh">
       {/* STAGE 2: Product Columns & Video Showcase */}
-      <div ref={heroContentTwoRef} className="hero-content hero-content-two pointer-events-auto w-full ">
+      <motion.div
+        ref={heroContentTwoRef}
+        className="hero-content hero-content-two pointer-events-auto w-full "
+        initial={reduceMotion ? false : 'hidden'}
+        whileInView="show"
+        viewport={{ once: true, amount: 0.25 }}
+        variants={{
+          hidden: {},
+          show: {
+            transition: { staggerChildren: reduceMotion ? 0 : 0.12, delayChildren: reduceMotion ? 0 : 0.08 },
+          },
+        }}
+      >
         {/* Left Column: Ingredients */}
-        <div className="hero-content-two-left">
+        <motion.div variants={itemVariants} className="hero-content-two-left">
           <div className="hero-content-two-item">
             <p className="description">High-Voltage Energy</p>
             <h3 className="at-subheadline">Zolt <br /> Splash</h3>
@@ -32,10 +58,10 @@ export default function FeaturesSection({
               Caffeine, Natural Flavor, Magnesium Citrate, Sodium Citrate, Stevia Extract
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Center Video Card with mobile controls */}
-        <div className="hero-content-two-center flex items-center justify-center ">
+        <motion.div variants={itemVariants} className="hero-content-two-center flex items-center justify-center ">
           <video
             ref={videoRef}
             className={`hero-content-two-center-video ${videoActive ? 'active' : ''}`}
@@ -52,10 +78,10 @@ export default function FeaturesSection({
           >
             <p className="description">Rotate Zolt</p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Right Column: Introduction */}
-        <div className="hero-content-two-right">
+        <motion.div variants={itemVariants} className="hero-content-two-right">
           <div className="hero-content-two-item">
             <p className="at-description">INTRODUCTION TO ZOLT</p>
             <p className="description">
@@ -70,8 +96,8 @@ export default function FeaturesSection({
           >
             <p className="description">Rotate Zolt</p>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

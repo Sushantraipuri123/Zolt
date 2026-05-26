@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import React, { useEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import { useGSAP } from '@gsap/react';
 import SmoothScroll from '@/components/SmoothScroll';
 import HeroSection from '@/components/landing/HeroSection';
@@ -37,6 +38,7 @@ export default function LandingPage() {
   const checkoutRef = useRef<HTMLElement>(null);
 
   const reducedMotion = usePrefersReducedMotion();
+  const reduceUiMotion = useReducedMotion();
   
   const [canvasMounted, setCanvasMounted] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -202,19 +204,40 @@ export default function LandingPage() {
         
         {/* Navigation Bar */}
         <div className="navigation">
-          <div className="navigation-left">
+          <motion.div
+            className="navigation-left"
+            whileHover={reduceUiMotion ? undefined : { scale: 1.03 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+          >
             <p>ZOLT</p>
-          </div>
+          </motion.div>
           <div className="navigation-center">
-            <a href="#home" className="navigation-description">Home</a>
-            <a href="#about" className="navigation-description">About</a>
-            <a href="#testimonials" className="navigation-description">Testimonials</a>
-            <a href="#faq" className="navigation-description">FAQ</a>
+            {(['#home', '#about', '#testimonials', '#faq'] as const).map((href, i) => {
+              const labels = ['Home', 'About', 'Testimonials', 'FAQ'] as const;
+              return (
+                <motion.a
+                  key={href}
+                  href={href}
+                  className="navigation-description group relative inline-block"
+                  whileHover={reduceUiMotion ? undefined : { y: -2 }}
+                  whileTap={reduceUiMotion ? undefined : { scale: 0.97 }}
+                  transition={{ type: 'spring', stiffness: 480, damping: 26 }}
+                >
+                  {labels[i]}
+                  <span className="pointer-events-none absolute -bottom-1 left-0 right-0 h-px origin-center scale-x-0 bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 transition-all duration-300 ease-out group-hover:scale-x-100 group-hover:opacity-100" />
+                </motion.a>
+              );
+            })}
           </div>
           <div className="navigation-right">
-            <div className="navigation-right-button">
+            <motion.div
+              className="navigation-right-button"
+              whileHover={reduceUiMotion ? undefined : { scale: 1.04, boxShadow: '0 0 28px rgba(255, 113, 32, 0.45)' }}
+              whileTap={reduceUiMotion ? undefined : { scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+            >
               <p>Coming Soon</p>
-            </div>
+            </motion.div>
           </div>
         </div>
 

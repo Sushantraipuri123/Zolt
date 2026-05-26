@@ -210,6 +210,38 @@ body {
   animation: heroGridDrift 56s linear infinite;
 }
 
+/* Futuristic HUD scan — single soft band (premium, not “matrix rain”) */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  opacity: 0.28;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 229, 255, 0.09) 42%,
+    rgba(255, 113, 32, 0.04) 50%,
+    transparent 100%
+  );
+  background-size: 100% 18%;
+  background-repeat: no-repeat;
+  background-position: 50% -20%;
+  animation: heroHudScan 12s ease-in-out infinite;
+}
+
+@keyframes heroHudScan {
+  0%,
+  100% {
+    background-position: 50% -18%;
+  }
+  50% {
+    background-position: 50% 118%;
+  }
+}
+
 @keyframes heroGridDrift {
   0% {
     transform: translate3d(0, 0, 0);
@@ -302,6 +334,11 @@ body {
   .hero-fog-c,
   .hero-fog-sky {
     animation: none;
+  }
+
+  .hero::after {
+    animation: none;
+    opacity: 0.1;
   }
 }
 
