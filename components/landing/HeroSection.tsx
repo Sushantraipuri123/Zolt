@@ -130,7 +130,7 @@ export default function HeroSection({
 
       // Draw ambient lightning atmospheric flash
       if (flashIntensity.current > 0) {
-        ctx.fillStyle = `rgba(99, 102, 241, ${flashIntensity.current * 0.12})`;
+        ctx.fillStyle = `rgba(255, 113, 32, ${flashIntensity.current * 0.08})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         flashIntensity.current *= 0.88;
       }
@@ -138,10 +138,10 @@ export default function HeroSection({
       // Draw active lightning bolts
       activeBolts.current.forEach((bolt, index) => {
         ctx.shadowBlur = 25;
-        ctx.shadowColor = '#6366f1';
+        ctx.shadowColor = 'rgba(255, 113, 32, 0.85)';
         ctx.globalCompositeOperation = 'lighter';
         ctx.beginPath();
-        ctx.strokeStyle = `rgba(255, 255, 255, ${bolt.opacity})`;
+        ctx.strokeStyle = `rgba(0, 229, 255, ${bolt.opacity * 0.95})`;
         ctx.lineWidth = bolt.width;
 
         if (bolt.segments.length > 0) {
@@ -199,7 +199,7 @@ export default function HeroSection({
           className="hero-fog-layer hero-fog-sky absolute inset-x-[-10%] -top-[8%] h-[48%] opacity-90 mix-blend-soft-light"
           style={{
             background:
-              'radial-gradient(ellipse 95% 70% at 50% 0%, rgba(185,215,255,0.22) 0%, rgba(0,200,230,0.08) 42%, transparent 72%)',
+              'radial-gradient(ellipse 95% 70% at 50% 0%, rgba(255,113,32,0.08) 0%, rgba(185,215,255,0.18) 38%, rgba(0,200,230,0.08) 52%, transparent 72%)',
           }}
         />
         <div
@@ -265,23 +265,40 @@ export default function HeroSection({
 
         {/* CENTER TITLE (Revealed after all strikes, in unison with 3D can fade up) */}
         <motion.div
-          className="center-content opacity-0 scale-90 flex flex-col items-center text-center py-10 md:py-20 relative order-1 md:order-2 pointer-events-none"
+          className="center-content opacity-0 scale-90 flex flex-col items-center text-center py-10 md:py-20 relative order-1 md:order-2 pointer-events-none max-w-lg mx-auto"
           animate={
             isComplete && !reduceMotion
               ? {
                   filter: [
                     'drop-shadow(0 0 0px transparent)',
-                    'drop-shadow(0 0 24px rgba(0,229,255,0.25))',
-                    'drop-shadow(0 0 8px rgba(255,113,32,0.15))',
+                    'drop-shadow(0 0 28px rgba(255,113,32,0.22))',
+                    'drop-shadow(0 0 12px rgba(0,229,255,0.18))',
                   ],
                 }
               : {}
           }
-          transition={{ duration: 2.8, ease: 'easeOut' }}
+          transition={{ duration: 2.6, ease: 'easeOut' }}
         >
-          <h1 className="text-[10px] font-bold tracking-[1.5em] text-zinc-600 uppercase mb-8">
+          <h1 className="text-[10px] font-bold tracking-[1.5em] text-zinc-600 uppercase mb-6">
             ZOLT
           </h1>
+          <div className="space-y-3 w-full">
+            <div className="hero-center-line overflow-hidden">
+              <p className="hero-center-line-inner text-[9px] font-black tracking-[0.42em] text-[var(--accent)] uppercase font-space-grotesk">
+                Reactor online
+              </p>
+            </div>
+            <div className="hero-center-line overflow-hidden">
+              <p className="hero-center-line-inner text-xs md:text-sm font-light tracking-[0.22em] text-zinc-400 uppercase">
+                Field-stable // Neural-grade flow
+              </p>
+            </div>
+            <div className="hero-center-line overflow-hidden px-2">
+              <p className="hero-center-line-inner text-[10px] md:text-[11px] text-zinc-600 leading-relaxed font-light">
+                Precision hydration fused with kinetic voltage—calibrated for zero-compromise performance.
+              </p>
+            </div>
+          </div>
         </motion.div>
 
         {/* RIGHT MENU (Strikes 3 & 4) */}
@@ -340,14 +357,14 @@ function MenuLink({
   return (
     <a href={link} className="group cursor-pointer flex flex-col items-center md:items-start">
       <div className="flex items-center gap-3">
-        <span className="text-[10px] font-mono text-indigo-500/50 group-hover:text-indigo-400">
+        <span className="text-[10px] font-mono text-[var(--accent)]/45 group-hover:text-[var(--accent-cyan)]">
           {index}
         </span>
         <h3 className="text-4xl md:text-5xl lg:text-6xl font-extralight tracking-tighter text-white/40 group-hover:text-white transition-all duration-500 ease-out">
           {label}
         </h3>
       </div>
-      <p className="text-[9px] tracking-[0.4em] text-zinc-400 mt-2 uppercase transition-colors group-hover:text-indigo-400/80">
+      <p className="text-[9px] tracking-[0.4em] text-zinc-400 mt-2 uppercase transition-colors group-hover:text-[var(--accent)]/90">
         // {sub}
       </p>
     </a>

@@ -13,6 +13,7 @@ export default function CheckoutSection() {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-[var(--accent)]/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-1/2 right-0 w-96 h-96 bg-[#00e5ff]/5 rounded-full blur-[160px] pointer-events-none" />
 
+      <div className="checkout-tunnel-inner relative z-10 flex flex-col flex-grow w-full min-h-0">
       {/* Main Content Grid */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-32 pb-16 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center flex-grow">
         
@@ -142,6 +143,7 @@ export default function CheckoutSection() {
           </h1>
         </div>
       </footer>
+      </div>
 
     </div>
   );

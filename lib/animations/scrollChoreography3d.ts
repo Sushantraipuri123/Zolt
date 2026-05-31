@@ -1,4 +1,5 @@
 import { gsap, ScrollTrigger } from '@/lib/gsap';
+import { registerEnergyCoreGalleryChoreography } from '@/lib/animations/energyCoreGalleryChoreography';
 import { scrollState } from '@/lib/three/scrollState';
 
 const DEG = Math.PI / 180;
@@ -12,6 +13,7 @@ export interface ScrollChoreography3dElements {
   adventure?: HTMLElement;
   gym?: HTMLElement;
   formula?: HTMLElement;
+  energyCoreGallery?: HTMLElement;
   checkout?: HTMLElement;
   scrollCue?: HTMLElement;
   heroScene?: HTMLElement;
@@ -59,11 +61,11 @@ export function createScrollChoreography3d(
     hero, 
     heroContent, 
     heroContentTwo,
-    about,
     horizontalGallery, 
     adventure, 
     gym, 
-    formula, 
+    formula,
+    energyCoreGallery,
     checkout,
     scrollCue,
     heroScene
@@ -75,6 +77,7 @@ export function createScrollChoreography3d(
     scrollState.progress = 0;
     scrollState.idleSpinY = 0;
     scrollState.bloomIntensity = 0.28;
+    scrollState.canAlpha = 1;
     return () => { };
   }
 
@@ -103,6 +106,8 @@ export function createScrollChoreography3d(
         isMobile: boolean;
       };
 
+      let cleanupEnergyCoreGallery: (() => void) | undefined;
+
       if (isDesktop) {
         // Stage 1 Coordinates - Centered, scaled up, tilted slightly
         setCan(0, 0.05, 0, -5, -20, 0, 1.05);
@@ -115,8 +120,10 @@ export function createScrollChoreography3d(
         const tl = gsap.timeline({
           defaults: { ease: 'none' },
           onUpdate: () => {
-            scrollState.progress = tl.progress();
-            scrollState.idleSpinY = Math.max(0, 0.15 * (1 - tl.progress() * 1.1));
+            const p = tl.progress();
+            scrollState.progress = p;
+            scrollState.idleSpinY = Math.max(0, 0.15 * (1 - p * 1.1));
+            scrollState.energyPulse = Math.sin(p * Math.PI) * 0.14;
           },
         });
 
@@ -174,7 +181,7 @@ export function createScrollChoreography3d(
 
         tl.to(scrollState, { bloomIntensity: 0.42, rimIntensity: 1.6, duration: 0.6 }, 0);
 
-        setupChoreography(tl, isDesktop);
+        cleanupEnergyCoreGallery = setupChoreography(tl, isDesktop);
       } else {
         // Mobile coordinates
         setCan(0, -0.05, 0, -4, -20, 0, 0.88);
@@ -187,8 +194,10 @@ export function createScrollChoreography3d(
         const tl = gsap.timeline({
           defaults: { ease: 'none' },
           onUpdate: () => {
-            scrollState.progress = tl.progress();
-            scrollState.idleSpinY = Math.max(0, 0.12 * (1 - tl.progress()));
+            const p = tl.progress();
+            scrollState.progress = p;
+            scrollState.idleSpinY = Math.max(0, 0.12 * (1 - p));
+            scrollState.energyPulse = Math.sin(p * Math.PI) * 0.12;
           },
         });
 
@@ -240,10 +249,13 @@ export function createScrollChoreography3d(
 
         tl.to(scrollState, { idleSpinY: 0, duration: 0.6 }, 0);
 
-        setupChoreography(tl, isDesktop);
+        cleanupEnergyCoreGallery = setupChoreography(tl, isDesktop);
       }
 
-      function setupChoreography(tl: gsap.core.Timeline, desktop: boolean) {
+      function setupChoreography(
+        tl: gsap.core.Timeline,
+        desktop: boolean
+      ): () => void {
         // Stage 1 Content fades out
         if (heroContent) {
           tl.fromTo(
@@ -310,9 +322,50 @@ export function createScrollChoreography3d(
 
         if (heroScene) {
           const slow = heroScene.querySelector('.scene-parallax-slow');
+          const mid = heroScene.querySelector('.scene-parallax-mid');
+          const fast = heroScene.querySelector('.scene-parallax-fast');
+          const core = heroScene.querySelector('.hero-core-breathe');
+          const smokes = heroScene.querySelectorAll('[data-smoke]');
+
           if (slow) {
-            tl.to(slow, { y: -60, opacity: 0.05, duration: 0.4, ease: 'power1.in' }, 0);
+            tl.to(slow, { y: -72, opacity: 0.04, duration: 0.45, ease: 'power1.in' }, 0);
           }
+          if (mid) {
+            tl.fromTo(
+              mid,
+              { y: 0, opacity: 0.4 },
+              { y: 52, opacity: 0.55, scale: 1.06, duration: 0.45, ease: 'power1.in' },
+              0
+            );
+          }
+          if (fast) {
+            tl.fromTo(
+              fast,
+              { y: 0, x: 0, opacity: 0.5 },
+              { y: -48, x: 36, opacity: 0.28, duration: 0.45, ease: 'power1.in' },
+              0
+            );
+          }
+          if (core) {
+            tl.to(
+              core,
+              { scale: 1.12, opacity: 0.52, duration: 0.45, ease: 'power1.inOut' },
+              0
+            );
+          }
+          smokes.forEach((el, i) => {
+            tl.to(
+              el,
+              {
+                y: (i % 2 === 0 ? 28 : -20) + i * 6,
+                opacity: 0.06,
+                scale: 1.04,
+                duration: 0.42,
+                ease: 'power1.in',
+              },
+              0
+            );
+          });
         }
 
         // Section 1 -> Section 2 ScrollTrigger
@@ -323,6 +376,11 @@ export function createScrollChoreography3d(
           scrub: 0.8,
           animation: tl,
           invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            if (heroScene) {
+              heroScene.style.setProperty('--heroScroll', self.progress.toFixed(4));
+            }
+          },
         });
 
         // ----------------------------------------------------
@@ -577,9 +635,383 @@ export function createScrollChoreography3d(
         }
 
         // ----------------------------------------------------
-        // Stage 5: Gym -> Formula (Section 5 -> Section 6)
+        // Stage 5–6: Formula → Checkout tunnel (single scrubbed timeline)
         // ----------------------------------------------------
-        if (formula) {
+        if (formula && checkout) {
+          const callouts = formula.querySelectorAll('.formula-callout');
+          const tunnelInner = checkout.querySelector('.checkout-tunnel-inner');
+          const tunnelScrollEndEl = energyCoreGallery ?? checkout;
+
+          const tlTunnel = gsap.timeline({
+            defaults: { ease: 'none' },
+            scrollTrigger: {
+              trigger: formula,
+              start: 'top 88%',
+              endTrigger: tunnelScrollEndEl,
+              end: 'top top',
+              scrub: 1.05,
+              invalidateOnRefresh: true,
+            },
+          });
+
+          if (tunnelInner) {
+            gsap.set(tunnelInner, { opacity: 0, y: 36, pointerEvents: 'none' });
+          }
+
+          if (energyCoreGallery) {
+            gsap.set(energyCoreGallery, { autoAlpha: 0 });
+          }
+
+          if (desktop) {
+            // Tunnel-in: can stays x≈0 + lookAt origin so motion reads as camera dolly into can (no lateral drift).
+            // Gym leaves can on the left; snap to center at tunnel t=0 (tunnel trigger is deep in Formula scroll).
+            tlTunnel.set(
+              scrollState.can,
+              {
+                x: 0,
+                y: -0.04,
+                z: 0.06,
+                rotX: 5 * DEG,
+                rotY: 780 * DEG,
+                rotZ: -4 * DEG,
+                scale: 0.86,
+              },
+              0
+            );
+            tlTunnel.set(
+              scrollState.camera,
+              {
+                x: 0,
+                y: 0.1,
+                z: 4.95,
+                targetX: 0,
+                targetY: 0.03,
+                targetZ: 0,
+              },
+              0
+            );
+            tlTunnel.set(scrollState, { canAlpha: 1, bloomIntensity: 0.28, rimIntensity: 1.25 }, 0);
+
+            // ~0–40%: readable Formula — centered, slow dolly
+            tlTunnel.to(
+              scrollState.can,
+              {
+                x: 0,
+                y: 0.02,
+                z: 0.1,
+                rotX: 4 * DEG,
+                rotY: 840 * DEG,
+                rotZ: -2 * DEG,
+                scale: 0.92,
+                duration: 0.4,
+              },
+              0
+            );
+            tlTunnel.to(
+              scrollState.camera,
+              {
+                x: 0,
+                z: 4.65,
+                targetX: 0,
+                targetY: 0.035,
+                targetZ: 0,
+                duration: 0.38,
+              },
+              0
+            );
+
+            // 40–58%: approach — still centered; lookAt stays on can
+            tlTunnel.to(
+              scrollState.can,
+              {
+                x: 0,
+                y: 0.04,
+                z: 0.22,
+                rotX: 4 * DEG,
+                rotY: 920 * DEG,
+                rotZ: -1 * DEG,
+                scale: 1.06,
+                duration: 0.18,
+              },
+              0.4
+            );
+            tlTunnel.to(
+              scrollState.camera,
+              {
+                x: 0,
+                z: 3.85,
+                targetX: 0,
+                targetY: 0.04,
+                targetZ: 0,
+                duration: 0.18,
+              },
+              0.42
+            );
+
+            if (callouts.length) {
+              tlTunnel.to(
+                callouts,
+                { opacity: 0.14, y: -22, duration: 0.22, stagger: 0.035, ease: 'none' },
+                0.48
+              );
+            }
+
+            // 58–76%: macro — dolly + scale on axis; minimal spin so it feels like entering the can
+            tlTunnel.to(
+              scrollState.camera,
+              { x: 0, z: 2.15, targetX: 0, targetY: 0.038, targetZ: 0, duration: 0.18 },
+              0.58
+            );
+            tlTunnel.to(
+              scrollState.can,
+              {
+                x: 0,
+                z: 0.34,
+                rotX: 6 * DEG,
+                rotY: 960 * DEG,
+                scale: 1.34,
+                duration: 0.18,
+              },
+              0.58
+            );
+            tlTunnel.to(
+              scrollState.camera,
+              { x: 0, z: 1.05, targetX: 0, targetY: 0.04, targetZ: 0, duration: 0.14 },
+              0.72
+            );
+            tlTunnel.to(
+              scrollState.can,
+              { x: 0, z: 0.42, scale: 1.52, rotY: 990 * DEG, duration: 0.14 },
+              0.72
+            );
+
+            // Peak: hide can in place (no lateral move while visible)
+            tlTunnel.to(scrollState, { canAlpha: 0, duration: 0.1 }, 0.76);
+            tlTunnel.to(
+              scrollState,
+              {
+                bloomIntensity: 0.44,
+                rimIntensity: 1.58,
+                duration: 0.08,
+              },
+              0.74
+            );
+            tlTunnel.to(
+              scrollState,
+              { bloomIntensity: 0.28, rimIntensity: 1.25, duration: 0.1 },
+              0.8
+            );
+
+            // After can is gone: reframe for checkout (was starting at 0.82 and read as “can slides left”)
+            tlTunnel.to(
+              scrollState.camera,
+              {
+                x: 0,
+                z: 4.85,
+                targetX: 0.1,
+                targetY: 0.06,
+                targetZ: 0,
+                duration: 0.1,
+              },
+              0.9
+            );
+            tlTunnel.to(
+              scrollState.can,
+              {
+                x: -1.95,
+                y: -0.06,
+                z: 0.08,
+                rotX: 6 * DEG,
+                rotY: 1185 * DEG,
+                rotZ: -2 * DEG,
+                scale: 0.85,
+                duration: 0.1,
+              },
+              0.9
+            );
+
+            if (tunnelInner && !energyCoreGallery) {
+              tlTunnel.to(
+                tunnelInner,
+                { opacity: 1, y: 0, duration: 0.16, ease: 'none' },
+                0.84
+              );
+              tlTunnel.call(() => {
+                gsap.set(tunnelInner, { pointerEvents: 'auto' });
+              }, undefined, 0.99);
+            }
+          } else {
+            tlTunnel.set(
+              scrollState.can,
+              {
+                x: 0,
+                y: -0.1,
+                z: 0.05,
+                rotX: 5 * DEG,
+                rotY: 765 * DEG,
+                rotZ: -2 * DEG,
+                scale: 0.72,
+              },
+              0
+            );
+            tlTunnel.set(
+              scrollState.camera,
+              {
+                x: 0,
+                y: 0.15,
+                z: 5.25,
+                targetX: 0,
+                targetY: -0.06,
+                targetZ: 0,
+              },
+              0
+            );
+            tlTunnel.set(scrollState, { canAlpha: 1, bloomIntensity: 0.22, rimIntensity: 1.2 }, 0);
+
+            tlTunnel.to(
+              scrollState.can,
+              {
+                x: 0,
+                y: -0.08,
+                z: 0.1,
+                rotX: 4 * DEG,
+                rotY: 820 * DEG,
+                rotZ: -1 * DEG,
+                scale: 0.78,
+                duration: 0.4,
+              },
+              0
+            );
+            tlTunnel.to(
+              scrollState.camera,
+              { x: 0, z: 4.95, targetX: 0, targetY: -0.02, targetZ: 0, duration: 0.36 },
+              0
+            );
+
+            tlTunnel.to(
+              scrollState.can,
+              {
+                x: 0,
+                y: -0.05,
+                z: 0.18,
+                rotY: 920 * DEG,
+                scale: 0.95,
+                duration: 0.18,
+              },
+              0.4
+            );
+            tlTunnel.to(
+              scrollState.camera,
+              { x: 0, z: 4.15, targetX: 0, targetY: 0.01, targetZ: 0, duration: 0.18 },
+              0.42
+            );
+
+            if (callouts.length) {
+              tlTunnel.to(
+                callouts,
+                { opacity: 0.14, y: -18, duration: 0.2, stagger: 0.04, ease: 'none' },
+                0.48
+              );
+            }
+
+            tlTunnel.to(
+              scrollState.camera,
+              { x: 0, z: 2.65, targetX: 0, targetY: 0.02, targetZ: 0, duration: 0.16 },
+              0.58
+            );
+            tlTunnel.to(
+              scrollState.can,
+              { x: 0, z: 0.32, rotY: 980 * DEG, scale: 1.22, duration: 0.16 },
+              0.58
+            );
+            tlTunnel.to(
+              scrollState.camera,
+              { x: 0, z: 1.38, targetX: 0, targetY: 0.02, targetZ: 0, duration: 0.14 },
+              0.72
+            );
+            tlTunnel.to(
+              scrollState.can,
+              { x: 0, z: 0.36, scale: 1.34, rotY: 1000 * DEG, duration: 0.14 },
+              0.72
+            );
+
+            tlTunnel.to(scrollState, { canAlpha: 0, duration: 0.1 }, 0.76);
+            tlTunnel.to(
+              scrollState,
+              { bloomIntensity: 0.38, rimIntensity: 1.52, duration: 0.08 },
+              0.74
+            );
+            tlTunnel.to(
+              scrollState,
+              { bloomIntensity: 0.22, rimIntensity: 1.2, duration: 0.1 },
+              0.8
+            );
+
+            tlTunnel.to(
+              scrollState.camera,
+              { x: 0, z: 5.05, targetX: 0.06, targetY: 0.05, targetZ: 0, duration: 0.1 },
+              0.9
+            );
+            tlTunnel.to(
+              scrollState.can,
+              {
+                x: 0,
+                y: -0.14,
+                z: 0.06,
+                rotX: 7 * DEG,
+                rotY: 1175 * DEG,
+                scale: 0.78,
+                duration: 0.1,
+              },
+              0.9
+            );
+
+            if (tunnelInner && !energyCoreGallery) {
+              tlTunnel.to(
+                tunnelInner,
+                { opacity: 1, y: 0, duration: 0.16, ease: 'none' },
+                0.84
+              );
+              tlTunnel.call(() => {
+                gsap.set(tunnelInner, { pointerEvents: 'auto' });
+              }, undefined, 0.99);
+            }
+          }
+
+          if (energyCoreGallery) {
+            tlTunnel.fromTo(
+              energyCoreGallery,
+              { autoAlpha: 0 },
+              { autoAlpha: 1, duration: 0.24, ease: 'none' },
+              0.76
+            );
+          }
+
+          if (energyCoreGallery && tunnelInner) {
+            gsap.timeline({
+              defaults: { ease: 'none' },
+              scrollTrigger: {
+                trigger: checkout,
+                start: 'top bottom',
+                end: 'top top',
+                scrub: 1.05,
+                invalidateOnRefresh: true,
+              },
+            })
+              .to(
+                tunnelInner,
+                { opacity: 1, y: 0, duration: 0.85, ease: 'none' },
+                0
+              )
+              .call(
+                () => {
+                  gsap.set(tunnelInner, { pointerEvents: 'auto' });
+                },
+                undefined,
+                0.94
+              );
+          }
+        } else if (formula) {
           const tlFormula = gsap.timeline({
             defaults: { ease: 'none' },
             scrollTrigger: {
@@ -588,17 +1020,16 @@ export function createScrollChoreography3d(
               end: 'top top',
               scrub: 1.2,
               invalidateOnRefresh: true,
-            }
+            },
           });
 
-          // Core spin centered and scaled up
           if (desktop) {
             tlFormula.to(scrollState.can, {
               x: 0,
               y: 0.05,
               z: 0.25,
               rotX: 0 * DEG,
-              rotY: 1125 * DEG, // adds 360 degree spin
+              rotY: 1125 * DEG,
               rotZ: 0 * DEG,
               scale: 1.28,
             });
@@ -613,12 +1044,7 @@ export function createScrollChoreography3d(
               scale: 1.05,
             });
           }
-        }
-
-        // ----------------------------------------------------
-        // Stage 6: Formula -> Checkout (Section 6 -> Section 7)
-        // ----------------------------------------------------
-        if (checkout) {
+        } else if (checkout) {
           const tlCheckout = gsap.timeline({
             defaults: { ease: 'none' },
             scrollTrigger: {
@@ -627,17 +1053,16 @@ export function createScrollChoreography3d(
               end: 'top top',
               scrub: 1.2,
               invalidateOnRefresh: true,
-            }
+            },
           });
 
-          // Settles into perfect close-up logo angle next to buys
           if (desktop) {
             tlCheckout.to(scrollState.can, {
-              x: -1.5, // Pushed further left into the empty layout column
+              x: -1.5,
               y: -0.08,
               z: 0.1,
               rotX: 8 * DEG,
-              rotY: 1170 * DEG, // elegant tilt
+              rotY: 1170 * DEG,
               rotZ: -3 * DEG,
               scale: 0.9,
             });
@@ -685,7 +1110,21 @@ export function createScrollChoreography3d(
           );
         }
 
+        let energyGalleryCleanup: (() => void) | undefined;
+        if (energyCoreGallery) {
+          energyGalleryCleanup = registerEnergyCoreGalleryChoreography(
+            energyCoreGallery,
+            desktop
+          );
+        }
+        return () => {
+          energyGalleryCleanup?.();
+        };
       }
+
+      return () => {
+        cleanupEnergyCoreGallery?.();
+      };
     }
   );
 

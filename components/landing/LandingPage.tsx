@@ -10,6 +10,7 @@ import FeaturesSection from '@/components/landing/FeaturesSection';
 import AdventureSection from '@/components/landing/AdventureSection';
 import GymSection from '@/components/landing/GymSection';
 import FormulaSection from '@/components/landing/FormulaSection';
+import EnergyCoreGallery from '@/components/landing/EnergyCoreGallery';
 import CheckoutSection from '@/components/landing/CheckoutSection';
 import HorizontalGallery from '@/components/landing/HorizontalGallery';
 import CinematicScene from '@/components/landing/CinematicScene';
@@ -17,15 +18,22 @@ import AnimatedCounter from '@/components/landing/AnimatedCounter';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { createHeroIntro } from '@/lib/animations/heroIntro';
 import { createScrollChoreography3d } from '@/lib/animations/scrollChoreography3d';
-import { gsap } from '@/lib/gsap';
+import { gsap, ScrollTrigger } from '@/lib/gsap';
 
 const CanCanvas = dynamic(() => import('@/components/three/CanCanvas'), {
   ssr: false,
 });
 
+const ABOUT_HEADLINE_WORDS =
+  'WELCOME TO ZOLT WHERE PERFORMANCE MEETS HYDRATION'.split(/\s+/);
+
+const ABOUT_BODY_TEXT =
+  'Here, we redefine energy for the modern world. Zolt combines sustained cognitive performance with clean, electrolyte-balanced hydration, creating an invigorating experience that is as focused as it is refreshing. Each sip represents an upgrade—clean energy, zero compromise, and absolute performance. This is more than a drink; this is Zolt. Recharge your life. Outrun the moment.';
+
 export default function LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
+  const heroSceneRef = useRef<HTMLDivElement>(null);
   const heroContentRef = useRef<HTMLDivElement>(null);
   const heroContentTwoRef = useRef<HTMLDivElement>(null);
   const scrollCueRef = useRef<HTMLDivElement>(null);
@@ -35,6 +43,7 @@ export default function LandingPage() {
   const adventureRef = useRef<HTMLElement>(null);
   const gymRef = useRef<HTMLElement>(null);
   const formulaRef = useRef<HTMLElement>(null);
+  const energyCoreGalleryRef = useRef<HTMLElement>(null);
   const checkoutRef = useRef<HTMLElement>(null);
 
   const reducedMotion = usePrefersReducedMotion();
@@ -49,6 +58,7 @@ export default function LandingPage() {
 
   // States for Rotate Zolt click micro-interaction
   const [rotate, setRotate] = useState(false);
+  const aboutSectionAnimatedRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -102,6 +112,7 @@ export default function LandingPage() {
         // Setup GSAP scroll trigger choreography
         const cleanupScroll = createScrollChoreography3d({
           hero: heroRef.current,
+          heroScene: heroSceneRef.current ?? undefined,
           heroContent: heroContentRef.current ?? undefined,
           heroContentTwo: heroContentTwoRef.current ?? undefined,
           about: aboutRef.current ?? undefined,
@@ -109,6 +120,7 @@ export default function LandingPage() {
           adventure: adventureRef.current ?? undefined,
           gym: gymRef.current ?? undefined,
           formula: formulaRef.current ?? undefined,
+          energyCoreGallery: energyCoreGalleryRef.current ?? undefined,
           checkout: checkoutRef.current ?? undefined,
           scrollCue: scrollCueRef.current?.querySelector('.hero-scroll-cue') as HTMLElement | undefined,
         });
@@ -122,6 +134,76 @@ export default function LandingPage() {
       gsap.set('.can-canvas', { opacity: 1 });
       gsap.set('.hero-content-two', { opacity: 1 });
       gsap.set('.hero-scroll-cue', { opacity: 0 });
+    },
+    { scope: rootRef, dependencies: [reducedMotion, canvasMounted, loading, isEngaged] }
+  );
+
+  useGSAP(
+    () => {
+      if (!aboutRef.current || !canvasMounted || loading || !isEngaged) return;
+
+      const section = aboutRef.current;
+      const headlineWords = section.querySelectorAll<HTMLElement>('.about-headline-word');
+      const descChars = section.querySelectorAll<HTMLElement>('.about-desc-char');
+      if (!headlineWords.length) return;
+
+      if (reducedMotion) {
+        gsap.set([...headlineWords, ...descChars], { clearProps: 'opacity,transform' });
+        return;
+      }
+
+      if (aboutSectionAnimatedRef.current) {
+        gsap.set([...headlineWords, ...descChars], { clearProps: 'opacity,transform' });
+        return;
+      }
+
+      gsap.set(headlineWords, {
+        y: -100,
+        opacity: 0,
+        rotation: () => gsap.utils.random(-80, 80),
+      });
+
+      if (descChars.length) {
+        gsap.set(descChars, {
+          x: 150,
+          opacity: 0,
+        });
+      }
+
+      const st = ScrollTrigger.create({
+        trigger: section,
+        start: 'top 75%',
+        once: true,
+        onEnter: () => {
+          aboutSectionAnimatedRef.current = true;
+          const tl = gsap.timeline();
+          tl.to(headlineWords, {
+            y: 0,
+            opacity: 1,
+            rotation: 0,
+            duration: 0.7,
+            ease: 'back.out(1.7)',
+            stagger: 0.15,
+          });
+          if (descChars.length) {
+            tl.to(
+              descChars,
+              {
+                x: 0,
+                opacity: 1,
+                duration: 0.7,
+                ease: 'power4.out',
+                stagger: 0.025,
+              },
+              '>-0.25'
+            );
+          }
+        },
+      });
+
+      return () => {
+        st.kill();
+      };
     },
     { scope: rootRef, dependencies: [reducedMotion, canvasMounted, loading, isEngaged] }
   );
@@ -266,9 +348,17 @@ export default function LandingPage() {
             id="home"
             className="hero w-full h-[80vh] relative overflow-hidden"
           >
-            {mounted && (
-              <CinematicScene variant="hero" active={isEngaged} />
-            )}
+            <div
+              ref={heroSceneRef}
+              className="hero-scene-root pointer-events-none absolute inset-0 z-0"
+              aria-hidden
+            >
+              {mounted && <CinematicScene variant="hero" active={isEngaged} />}
+            </div>
+            <div
+              className="hero-intro-shockwave pointer-events-none absolute left-1/2 top-1/2 z-[4] h-[min(140vmax,1600px)] w-[min(140vmax,1600px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[color-mix(in_srgb,var(--accent)_45%,transparent)] opacity-0 mix-blend-plus-lighter shadow-[0_0_80px_rgba(255,113,32,0.15)]"
+              aria-hidden
+            />
             <div className="hero-absolute">
               <HeroSection
                 heroContentRef={heroContentRef}
@@ -297,13 +387,23 @@ export default function LandingPage() {
             className="about w-full"
           >
             <div className="about-content">
-              <p className="description" style={{ color: 'var(--accent)' }}>About Zolt Energy</p>
-              <h1 className="at-headline">WELCOME TO ZOLT WHERE PERFORMANCE MEETS HYDRATION</h1>
-              <p className="about-description">
-                Here, we redefine energy for the modern world. Zolt combines sustained cognitive performance with
-                clean, electrolyte-balanced hydration, creating an invigorating experience that is as focused as it is
-                refreshing. Each sip represents an upgrade—clean energy, zero compromise, and absolute performance.
-                This is more than a drink; this is Zolt. Recharge your life. Outrun the moment.
+              <p className="description" style={{ color: 'var(--accent)' }}>
+                About Zolt Energy
+              </p>
+              <h1 className="at-headline">
+                {ABOUT_HEADLINE_WORDS.map((word, i) => (
+                  <React.Fragment key={`about-hw-${i}-${word}`}>
+                    {i > 0 ? ' ' : null}
+                    <span className="about-headline-word inline-block will-change-transform">{word}</span>
+                  </React.Fragment>
+                ))}
+              </h1>
+              <p className="about-description break-words">
+                {ABOUT_BODY_TEXT.split('').map((ch, i) => (
+                  <span key={`about-ch-${i}`} className="about-desc-char inline-block will-change-transform">
+                    {ch === ' ' ? '\u00A0' : ch}
+                  </span>
+                ))}
               </p>
 
               {/* High-Voltage Metrics Counters Grid */}
@@ -371,6 +471,14 @@ export default function LandingPage() {
             className="formula w-full"
           >
             <FormulaSection />
+          </section>
+
+          <section
+            ref={energyCoreGalleryRef}
+            id="energy-core"
+            className="energy-core-gallery ecg-root relative z-[5] w-full overflow-x-clip"
+          >
+            <EnergyCoreGallery />
           </section>
 
           {/* Section 7: Checkout & Footer (Stage 6) */}

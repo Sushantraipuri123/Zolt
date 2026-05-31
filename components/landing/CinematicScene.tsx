@@ -1,18 +1,21 @@
 import { forwardRef, useEffect, useRef } from 'react';
 import { gsap } from '@/lib/gsap';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 interface CinematicSceneProps {
   variant?: 'hero' | 'story';
   active?: boolean;
 }
 
-const PARTICLE_COUNT = 24;
+const PARTICLE_COUNT_STORY = 24;
+const PARTICLE_COUNT_HERO = 72;
 
 const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
   function CinematicScene({ variant = 'hero', active = false }, ref) {
     const innerRef = useRef<HTMLDivElement>(null);
     const lightningRef = useRef<SVGSVGElement>(null);
     const ambientFlashRef = useRef<HTMLDivElement>(null);
+    const reducedMotion = usePrefersReducedMotion();
 
     useEffect(() => {
       const root = innerRef.current;
@@ -21,6 +24,7 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
       if (!root) return;
 
       const shouldStrike = variant === 'story' || active;
+      const isHero = variant === 'hero';
 
       const ctx = gsap.context(() => {
         // High-voltage double electrical lightning discharge
@@ -52,36 +56,76 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
             .to(flash, { opacity: 0, duration: 0.6, ease: 'power3.out' }, 0.74);
         }
 
-        root.querySelectorAll('[data-particle]').forEach((el, i) => {
-          gsap.to(el, {
-            y: -30 - (i % 5) * 12,
-            x: (i % 2 === 0 ? 1 : -1) * (8 + (i % 4) * 4),
-            opacity: 0.15 + (i % 3) * 0.08,
-            duration: 4 + (i % 6),
-            ease: 'sine.inOut',
-            yoyo: true,
-            repeat: -1,
-            delay: i * 0.15,
+        if (!reducedMotion) {
+          root.querySelectorAll('[data-particle]').forEach((el, i) => {
+            gsap.to(el, {
+              y: -30 - (i % 5) * 12,
+              x: (i % 2 === 0 ? 1 : -1) * (8 + (i % 4) * 4),
+              opacity: 0.15 + (i % 3) * 0.08,
+              duration: 4 + (i % 6),
+              ease: 'sine.inOut',
+              yoyo: true,
+              repeat: -1,
+              delay: i * 0.12,
+            });
           });
-        });
 
-        root.querySelectorAll('[data-smoke]').forEach((el, i) => {
-          gsap.to(el, {
-            y: 40 + i * 10,
-            opacity: 0.2,
-            scale: 1.05,
-            duration: 10 + i * 2,
-            ease: 'none',
-            yoyo: true,
-            repeat: -1,
+          root.querySelectorAll('[data-smoke]').forEach((el, i) => {
+            gsap.to(el, {
+              y: 40 + i * 10,
+              opacity: 0.2,
+              scale: 1.05,
+              duration: 10 + i * 2,
+              ease: 'none',
+              yoyo: true,
+              repeat: -1,
+            });
           });
-        });
+
+          if (isHero) {
+            root.querySelectorAll('[data-hero-beam]').forEach((el, i) => {
+              gsap.to(el, {
+                x: (i % 2 === 0 ? 1 : -1) * (18 + i * 6),
+                opacity: 0.22 + (i % 3) * 0.06,
+                duration: 14 + i * 3,
+                ease: 'sine.inOut',
+                yoyo: true,
+                repeat: -1,
+                delay: i * 0.4,
+              });
+            });
+            root.querySelectorAll('[data-reactor-ring]').forEach((el, i) => {
+              gsap.to(el, {
+                opacity: 0.06 + i * 0.05,
+                duration: 5 + i * 1.2,
+                ease: 'sine.inOut',
+                yoyo: true,
+                repeat: -1,
+                delay: i * 0.35,
+              });
+            });
+            root.querySelectorAll('[data-hero-streak]').forEach((el, i) => {
+              gsap.fromTo(
+                el,
+                { xPercent: -120 },
+                {
+                  xPercent: 140,
+                  duration: 9 + i * 2.5,
+                  ease: 'none',
+                  repeat: -1,
+                  delay: i * 1.8,
+                }
+              );
+            });
+          }
+        }
       });
 
       return () => ctx.revert();
-    }, [variant, active]);
+    }, [variant, active, reducedMotion]);
 
     const isHero = variant === 'hero';
+    const particleCount = isHero ? PARTICLE_COUNT_HERO : PARTICLE_COUNT_STORY;
 
     return (
       <div
@@ -111,7 +155,9 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
           }`}
           style={{
             background:
-              'radial-gradient(circle, rgba(90,160,255,0.1) 0%, transparent 70%)',
+              isHero
+                ? 'radial-gradient(circle, rgba(255,113,32,0.08) 0%, rgba(90,160,255,0.12) 42%, transparent 72%)'
+                : 'radial-gradient(circle, rgba(90,160,255,0.1) 0%, transparent 70%)',
           }}
         />
 
@@ -121,9 +167,80 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
             className="pointer-events-none absolute left-1/2 top-[42%] z-0 h-[min(85vh,900px)] w-[min(95vw,900px)] -translate-x-1/2 -translate-y-1/2 opacity-40 mix-blend-screen hero-core-breathe"
             style={{
               background:
-                'radial-gradient(circle at 50% 50%, rgba(0,229,255,0.14) 0%, rgba(100,160,255,0.05) 35%, transparent 62%)',
+                'radial-gradient(circle at 50% 50%, rgba(255,113,32,0.12) 0%, rgba(0,229,255,0.12) 38%, rgba(100,160,255,0.05) 52%, transparent 65%)',
+              transform: 'translate(-50%, calc(-50% + var(--heroScroll, 0) * -18px))',
             }}
           />
+        )}
+
+        {isHero && (
+          <>
+            <div
+              data-hero-beam
+              className="pointer-events-none absolute -left-[8%] top-0 z-[1] h-[115%] w-[38%] -skew-x-[12deg] opacity-20 mix-blend-plus-lighter blur-3xl"
+              style={{
+                background:
+                  'linear-gradient(105deg, transparent 0%, rgba(255,113,32,0.35) 40%, rgba(0,229,255,0.12) 70%, transparent 100%)',
+              }}
+            />
+            <div
+              data-hero-beam
+              className="pointer-events-none absolute -right-[5%] top-[5%] z-[1] h-[100%] w-[32%] skew-x-[10deg] opacity-[0.18] mix-blend-screen blur-[56px]"
+              style={{
+                background:
+                  'linear-gradient(-95deg, transparent 0%, rgba(0,229,255,0.22) 45%, rgba(255,113,32,0.08) 78%, transparent 100%)',
+              }}
+            />
+            <div
+              data-hero-beam
+              className="pointer-events-none absolute left-[22%] top-[12%] z-[1] h-[88%] w-[22%] -skew-x-[6deg] opacity-14 mix-blend-soft-light blur-[48px]"
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(255,180,90,0.2) 0%, transparent 55%, rgba(0,229,255,0.08) 100%)',
+              }}
+            />
+          </>
+        )}
+
+        {isHero && (
+          <div
+            className="pointer-events-none absolute left-1/2 top-[44%] z-[1] h-[min(90vh,920px)] w-[min(96vw,920px)] -translate-x-1/2 -translate-y-1/2"
+            aria-hidden
+          >
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={`ring-${i}`}
+                data-reactor-ring
+                className="absolute left-1/2 top-1/2 rounded-full border border-[color-mix(in_srgb,var(--accent)_38%,transparent)] opacity-20"
+                style={{
+                  width: `${38 + i * 11}%`,
+                  height: `${38 + i * 11}%`,
+                  transform: `translate(-50%, -50%) scale(${0.92 + i * 0.04})`,
+                  boxShadow: '0 0 40px rgba(255,113,32,0.06), inset 0 0 60px rgba(0,229,255,0.04)',
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {isHero && (
+          <div className="pointer-events-none absolute inset-0 z-[2] overflow-hidden mix-blend-screen opacity-30">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={`streak-${i}`}
+                data-hero-streak
+                className="hero-light-streak absolute left-0 top-0 h-full w-[45%] -translate-x-1/2"
+                style={{
+                  top: `${18 + i * 22}%`,
+                  height: '2px',
+                  background:
+                    'linear-gradient(90deg, transparent, rgba(255,255,255,0.55), rgba(255,113,32,0.45), transparent)',
+                  opacity: 0.35,
+                  filter: 'blur(0.5px)',
+                }}
+              />
+            ))}
+          </div>
         )}
 
         {/* Floor haze */}
@@ -153,22 +270,30 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
           }}
         />
 
-        {/* Dust particles */}
+        {/* Dust / energy particles */}
         <div className="absolute inset-0">
-          {Array.from({ length: PARTICLE_COUNT }).map((_, i) => (
-            <div
-              key={i}
-              data-particle
-              className="absolute rounded-full bg-white"
-              style={{
-                width: 1 + (i % 3),
-                height: 1 + (i % 3),
-                left: `${(i * 17) % 100}%`,
-                top: `${(i * 23) % 100}%`,
-                opacity: 0.08,
-              }}
-            />
-          ))}
+          {Array.from({ length: particleCount }).map((_, i) => {
+            const accent = i % 4 === 0;
+            const cyan = i % 4 === 1;
+            return (
+              <div
+                key={i}
+                data-particle
+                className={`absolute rounded-full ${accent ? 'bg-[var(--accent)]' : cyan ? 'bg-[var(--accent-cyan)]' : 'bg-white'}`}
+                style={{
+                  width: 1 + (i % 4),
+                  height: 1 + (i % 4),
+                  left: `${(i * 13) % 100}%`,
+                  top: `${(i * 19) % 100}%`,
+                  opacity: accent ? 0.14 : cyan ? 0.12 : 0.07,
+                  boxShadow:
+                    accent || cyan
+                      ? '0 0 10px rgba(255,113,32,0.25), 0 0 14px rgba(0,229,255,0.12)'
+                      : undefined,
+                }}
+              />
+            );
+          })}
         </div>
 
         <div
@@ -228,7 +353,7 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
               <path
                 d="M 680 -50 L 700 180 L 650 220 L 750 500 L 670 540 L 800 820 L 750 860 L 880 1150"
                 fill="none"
-                stroke="#6b8cff"
+                stroke="#ff7120"
                 strokeWidth="4"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -239,7 +364,7 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
               <path
                 d="M 750 500 L 850 620 L 810 640 L 910 780"
                 fill="none"
-                stroke="#8ab4ff"
+                stroke="#ffb300"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -251,7 +376,7 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
               <path
                 d="M 670 540 L 590 680 L 630 710 L 550 850"
                 fill="none"
-                stroke="#8ab4ff"
+                stroke="#00e5ff"
                 strokeWidth="1.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -273,7 +398,7 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
             {/* Ambient Lightning Flash Overlay */}
             <div
               ref={ambientFlashRef}
-              className="absolute inset-0 z-0 bg-gradient-to-r from-transparent to-[#8ab4ff]/30 opacity-0 pointer-events-none mix-blend-screen"
+              className="absolute inset-0 z-0 bg-gradient-to-r from-transparent via-[#ff7120]/25 to-[#00e5ff]/25 opacity-0 pointer-events-none mix-blend-screen"
             />
           </>
         )}

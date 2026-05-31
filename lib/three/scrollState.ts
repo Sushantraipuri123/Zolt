@@ -23,6 +23,8 @@ export const scrollState = {
   energyPulse: 0,
   idleSpinY: 0.15,
   velocity: 0,
+  /** 1 = visible; scrubs to 0 during Formula→Checkout tunnel (can hidden at peak zoom). */
+  canAlpha: 1,
 };
 
 export const scrollDisplay = {
@@ -34,6 +36,7 @@ export const scrollDisplay = {
   energyPulse: scrollState.energyPulse,
   idleSpinY: scrollState.idleSpinY,
   velocity: scrollState.velocity,
+  canAlpha: scrollState.canAlpha,
 };
 
 export function lerpScrollDisplay(factor: number) {
@@ -49,6 +52,7 @@ export function lerpScrollDisplay(factor: number) {
     (scrollState.idleSpinY - scrollDisplay.idleSpinY) * t;
   scrollDisplay.velocity +=
     (scrollState.velocity - scrollDisplay.velocity) * t;
+  scrollDisplay.canAlpha += (scrollState.canAlpha - scrollDisplay.canAlpha) * t;
 
   (['x', 'y', 'z', 'rotX', 'rotY', 'rotZ', 'scale'] as const).forEach((k) => {
     scrollDisplay.can[k] += (scrollState.can[k] - scrollDisplay.can[k]) * t;
