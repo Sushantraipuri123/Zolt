@@ -54,6 +54,7 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(true);
   const [isEngaged, setIsEngaged] = useState(false);
   const [showStartPrompt, setShowStartPrompt] = useState(false);
+  const [navSolid, setNavSolid] = useState(false);
   const audioManager = useRef<any>(null);
 
   // States for Rotate Zolt click micro-interaction
@@ -78,6 +79,21 @@ export default function LandingPage() {
     }, 1100);
     return () => clearTimeout(timer);
   }, []);
+
+  useGSAP(
+    () => {
+      const hero = heroRef.current;
+      if (!hero) return;
+      const st = ScrollTrigger.create({
+        trigger: hero,
+        start: 'bottom top',
+        end: 'max',
+        onToggle: (self) => setNavSolid(self.isActive),
+      });
+      return () => st.kill();
+    },
+    { dependencies: [mounted] }
+  );
 
   const startInitialization = () => {
     if (isEngaged) return;
@@ -285,7 +301,7 @@ export default function LandingPage() {
 
         
         {/* Navigation Bar */}
-        <div className="navigation">
+        <div className={`navigation${navSolid ? ' navigation--solid' : ''}`}>
           <motion.div
             className="navigation-left"
             whileHover={reduceUiMotion ? undefined : { scale: 1.03 }}
@@ -342,15 +358,27 @@ export default function LandingPage() {
         {/* Main Dark Grid container wrapping sections */}
         <main className="background-container text-foreground min-h-screen pt-20">
           
-          {/* Section 1: Hero (Stage 1) - Natural 80vh height */}
+          {/* Section 1: Hero (Stage 1) — full viewport height so herobg fills the screen */}
           <section
             ref={heroRef}
             id="home"
-            className="hero w-full h-[80vh] relative overflow-hidden"
+            className="hero -mt-20 box-border w-full min-h-[100vh] pt-20 relative overflow-hidden"
           >
+            <div className="hero-bg-photo pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
+              {/* eslint-disable-next-line @next/next/no-img-element -- full-bleed decorative hero art */}
+              <img
+                src="/images/herobg.png"
+                alt=""
+                className="absolute inset-0 h-full min-h-full w-full object-cover object-[center_72%]"
+              />
+              <div
+                className="hero-bg-scrim pointer-events-none absolute inset-0"
+                aria-hidden
+              />
+            </div>
             <div
               ref={heroSceneRef}
-              className="hero-scene-root pointer-events-none absolute inset-0 z-0"
+              className="hero-scene-root pointer-events-none absolute inset-0 z-[1]"
               aria-hidden
             >
               {mounted && <CinematicScene variant="hero" active={isEngaged} />}
@@ -359,6 +387,16 @@ export default function LandingPage() {
               className="hero-intro-shockwave pointer-events-none absolute left-1/2 top-1/2 z-[4] h-[min(140vmax,1600px)] w-[min(140vmax,1600px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[color-mix(in_srgb,var(--accent)_45%,transparent)] opacity-0 mix-blend-plus-lighter shadow-[0_0_80px_rgba(255,113,32,0.15)]"
               aria-hidden
             />
+            <div className="hero-fx-layer pointer-events-none absolute inset-0 z-[3] overflow-hidden" aria-hidden>
+              <div className="hero-orbit-ring-wrap">
+                <div className="hero-orbit-ring-scale">
+                  <div className="hero-orbit-ring" />
+                </div>
+              </div>
+              <div className="hero-energy-platform">
+                <div className="hero-energy-platform-inner" />
+              </div>
+            </div>
             <div className="hero-absolute">
               <HeroSection
                 heroContentRef={heroContentRef}

@@ -8,7 +8,8 @@ interface CinematicSceneProps {
 }
 
 const PARTICLE_COUNT_STORY = 24;
-const PARTICLE_COUNT_HERO = 72;
+/** Cap hero DOM particles for FPS (plan: ≤80) */
+const PARTICLE_COUNT_HERO = 80;
 
 const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
   function CinematicScene({ variant = 'hero', active = false }, ref) {
@@ -83,15 +84,26 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
           });
 
           if (isHero) {
-            root.querySelectorAll('[data-hero-beam]').forEach((el, i) => {
+            root.querySelectorAll('[data-hero-silhouette]').forEach((el, i) => {
               gsap.to(el, {
-                x: (i % 2 === 0 ? 1 : -1) * (18 + i * 6),
-                opacity: 0.22 + (i % 3) * 0.06,
-                duration: 14 + i * 3,
+                x: (i % 2 === 0 ? 1 : -1) * (10 + i * 4),
+                y: (i % 2 === 0 ? -1 : 1) * (8 + i * 3),
+                duration: 22 + i * 8,
                 ease: 'sine.inOut',
                 yoyo: true,
                 repeat: -1,
-                delay: i * 0.4,
+                delay: i * 0.5,
+              });
+            });
+            root.querySelectorAll('[data-hero-beam]').forEach((el, i) => {
+              gsap.to(el, {
+                x: (i % 2 === 0 ? 1 : -1) * (14 + i * 5),
+                opacity: 0.28 + (i % 3) * 0.07,
+                duration: 20 + i * 4,
+                ease: 'sine.inOut',
+                yoyo: true,
+                repeat: -1,
+                delay: i * 0.45,
               });
             });
             root.querySelectorAll('[data-reactor-ring]').forEach((el, i) => {
@@ -139,7 +151,9 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
       >
         {/* Depth layer — far */}
         <div
-          className="scene-parallax-slow absolute -left-[20%] top-[10%] h-[80vh] w-[70vw] rounded-full opacity-30"
+          className={`scene-parallax-slow absolute -left-[20%] top-[10%] h-full min-h-[70vh] w-[70vw] rounded-full ${
+            isHero ? 'opacity-[0.12]' : 'opacity-30'
+          }`}
           style={{
             background:
               'radial-gradient(circle, rgba(107,140,255,0.14) 0%, transparent 68%)',
@@ -150,7 +164,7 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
         <div
           className={`scene-parallax-mid absolute rounded-full ${
             isHero
-              ? 'right-[-15%] top-[20%] h-[65vh] w-[55vw] opacity-40'
+              ? 'right-[-15%] top-[20%] h-[65vh] w-[55vw] opacity-[0.18]'
               : 'right-[-10%] top-[30%] h-[50vh] w-[45vw] opacity-25'
           }`}
           style={{
@@ -164,7 +178,7 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
         {/* Power core — very slow radial breathing behind scene center */}
         {isHero && (
           <div
-            className="pointer-events-none absolute left-1/2 top-[42%] z-0 h-[min(85vh,900px)] w-[min(95vw,900px)] -translate-x-1/2 -translate-y-1/2 opacity-40 mix-blend-screen hero-core-breathe"
+            className="pointer-events-none absolute left-1/2 top-[42%] z-0 h-[min(85vh,900px)] w-[min(95vw,900px)] -translate-x-1/2 -translate-y-1/2 opacity-[0.2] mix-blend-screen hero-core-breathe"
             style={{
               background:
                 'radial-gradient(circle at 50% 50%, rgba(255,113,32,0.12) 0%, rgba(0,229,255,0.12) 38%, rgba(100,160,255,0.05) 52%, transparent 65%)',
@@ -176,27 +190,43 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
         {isHero && (
           <>
             <div
-              data-hero-beam
-              className="pointer-events-none absolute -left-[8%] top-0 z-[1] h-[115%] w-[38%] -skew-x-[12deg] opacity-20 mix-blend-plus-lighter blur-3xl"
+              data-hero-silhouette
+              className="pointer-events-none absolute -left-[20%] bottom-[8%] z-0 h-[42vh] w-[min(52vw,520px)] rounded-full opacity-[0.09] blur-[90px] mix-blend-soft-light"
               style={{
                 background:
-                  'linear-gradient(105deg, transparent 0%, rgba(255,113,32,0.35) 40%, rgba(0,229,255,0.12) 70%, transparent 100%)',
+                  'radial-gradient(ellipse 70% 80% at 45% 55%, rgba(45,32,24,0.95) 0%, rgba(20,16,14,0.5) 45%, transparent 72%)',
+              }}
+            />
+            <div
+              data-hero-silhouette
+              className="pointer-events-none absolute -right-[12%] bottom-[6%] z-0 h-[36vh] w-[min(44vw,440px)] rounded-full opacity-[0.07] blur-[88px] mix-blend-soft-light"
+              style={{
+                background:
+                  'radial-gradient(ellipse 75% 70% at 55% 50%, rgba(28,22,30,0.9) 0%, rgba(12,10,14,0.45) 48%, transparent 74%)',
               }}
             />
             <div
               data-hero-beam
-              className="pointer-events-none absolute -right-[5%] top-[5%] z-[1] h-[100%] w-[32%] skew-x-[10deg] opacity-[0.18] mix-blend-screen blur-[56px]"
+              className="pointer-events-none absolute -left-[8%] top-0 z-[1] h-[115%] w-[38%] -skew-x-[12deg] opacity-[0.26] mix-blend-plus-lighter blur-3xl"
               style={{
                 background:
-                  'linear-gradient(-95deg, transparent 0%, rgba(0,229,255,0.22) 45%, rgba(255,113,32,0.08) 78%, transparent 100%)',
+                  'linear-gradient(105deg, transparent 0%, rgba(255,113,32,0.42) 40%, rgba(0,229,255,0.14) 70%, transparent 100%)',
               }}
             />
             <div
               data-hero-beam
-              className="pointer-events-none absolute left-[22%] top-[12%] z-[1] h-[88%] w-[22%] -skew-x-[6deg] opacity-14 mix-blend-soft-light blur-[48px]"
+              className="pointer-events-none absolute -right-[5%] top-[5%] z-[1] h-[100%] w-[32%] skew-x-[10deg] opacity-[0.22] mix-blend-screen blur-[56px]"
               style={{
                 background:
-                  'linear-gradient(180deg, rgba(255,180,90,0.2) 0%, transparent 55%, rgba(0,229,255,0.08) 100%)',
+                  'linear-gradient(-95deg, transparent 0%, rgba(0,229,255,0.26) 45%, rgba(255,113,32,0.12) 78%, transparent 100%)',
+              }}
+            />
+            <div
+              data-hero-beam
+              className="pointer-events-none absolute left-[22%] top-[12%] z-[1] h-[88%] w-[22%] -skew-x-[6deg] opacity-[0.18] mix-blend-soft-light blur-[48px]"
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(255,160,72,0.26) 0%, transparent 55%, rgba(0,229,255,0.1) 100%)',
               }}
             />
           </>
@@ -245,7 +275,9 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
 
         {/* Floor haze */}
         <div
-          className="scene-parallax-fast absolute bottom-0 left-0 right-0 h-[45vh] opacity-50"
+          className={`scene-parallax-fast absolute bottom-0 left-0 right-0 h-[45vh] ${
+            isHero ? 'opacity-[0.22]' : 'opacity-50'
+          }`}
           style={{
             background:
               'linear-gradient(0deg, rgba(5,5,5,0.95) 0%, rgba(107,140,255,0.04) 40%, transparent 100%)',
@@ -273,23 +305,26 @@ const CinematicScene = forwardRef<HTMLDivElement, CinematicSceneProps>(
         {/* Dust / energy particles */}
         <div className="absolute inset-0">
           {Array.from({ length: particleCount }).map((_, i) => {
-            const accent = i % 4 === 0;
-            const cyan = i % 4 === 1;
+            const accent = isHero ? i % 3 !== 2 : i % 4 === 0;
+            const cyan = isHero ? i % 3 === 2 : i % 4 === 1;
+            const dot = isHero ? 2 + (i % 3) : 1 + (i % 4);
             return (
               <div
                 key={i}
                 data-particle
-                className={`absolute rounded-full ${accent ? 'bg-[var(--accent)]' : cyan ? 'bg-[var(--accent-cyan)]' : 'bg-white'}`}
+                className={`absolute rounded-full ${accent ? 'bg-[var(--accent)]' : cyan ? 'bg-[var(--accent-cyan)]' : 'bg-[#ffd4a8]'}`}
                 style={{
-                  width: 1 + (i % 4),
-                  height: 1 + (i % 4),
+                  width: dot,
+                  height: dot,
                   left: `${(i * 13) % 100}%`,
                   top: `${(i * 19) % 100}%`,
-                  opacity: accent ? 0.14 : cyan ? 0.12 : 0.07,
+                  opacity: accent ? (isHero ? 0.18 : 0.14) : cyan ? (isHero ? 0.14 : 0.12) : isHero ? 0.09 : 0.07,
                   boxShadow:
                     accent || cyan
-                      ? '0 0 10px rgba(255,113,32,0.25), 0 0 14px rgba(0,229,255,0.12)'
-                      : undefined,
+                      ? '0 0 10px rgba(255,113,32,0.28), 0 0 14px rgba(0,229,255,0.12)'
+                      : isHero
+                        ? '0 0 8px rgba(255,140,80,0.15)'
+                        : undefined,
                 }}
               />
             );

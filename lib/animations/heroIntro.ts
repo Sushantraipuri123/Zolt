@@ -4,8 +4,8 @@ import { scrollState } from '@/lib/three/scrollState';
 const DEG = Math.PI / 180;
 
 /**
- * Creates the high-voltage cinematic entrance sequence for Zolt.
- * Coordinates sequential lightning reveals, can "emergence" on scrollState, shockwave, HUD, and nav chrome.
+ * Cinematic hero entrance: DOM ring/platform, headline + stats + CTA stagger,
+ * shockwave + can emergence + canvas reveal (unchanged handoff to scroll choreography).
  */
 export function createHeroIntro(container?: HTMLElement | null) {
   const reduceMotion =
@@ -27,8 +27,14 @@ export function createHeroIntro(container?: HTMLElement | null) {
     gsap.set('.navigation', { opacity: 1, filter: 'none' });
     gsap.set('.hero-intro-shockwave', { opacity: 0, visibility: 'hidden' });
     gsap.set('.center-content', { opacity: 1, scale: 1 });
-    gsap.set('.hero-center-line-inner', { clearProps: 'all' });
-    gsap.set('.corner-card', { clearProps: 'skewX,rotateX' });
+    gsap.set('.hero-headline-line-inner', { clearProps: 'all' });
+    gsap.set('.hero-eyebrow', { clearProps: 'all' });
+    gsap.set('.hero-body-copy', { clearProps: 'all' });
+    gsap.set('.hero-cta-wrap', { clearProps: 'all' });
+    gsap.set('.hero-trailer-row', { clearProps: 'all' });
+    gsap.set('.hero-stat-row', { clearProps: 'all' });
+    gsap.set('.hero-energy-platform', { opacity: 1, scale: 1 });
+    gsap.set('.hero-orbit-ring-scale', { opacity: 1, scale: 1 });
     if (typeof window !== 'undefined' && (window as any).zoltRevealCenterContent) {
       (window as any).zoltRevealCenterContent();
     }
@@ -69,8 +75,10 @@ export function createHeroIntro(container?: HTMLElement | null) {
   scrollState.can.rotX = (isDesktop ? -5 : -4) * DEG;
 
   gsap.set('.can-canvas', { opacity: 0, scale: 0.9 });
+  gsap.set('.hero-energy-platform', { opacity: 0, scale: 0.88 });
+  gsap.set('.hero-orbit-ring-scale', { opacity: 0, scale: 0.92 });
 
-  // Nav chrome: part of the same launch (subtle, no layout change)
+  // Nav chrome
   safeFromTo(
     '.navigation',
     { opacity: 0.4, filter: 'blur(6px)' },
@@ -78,43 +86,79 @@ export function createHeroIntro(container?: HTMLElement | null) {
     0.12
   );
 
-  tl.add(() => {
-    if (typeof window !== 'undefined' && (window as any).zoltStrikeMenuLink) {
-      (window as any).zoltStrikeMenuLink(0);
-    }
-  }, 0.1);
-
-  tl.add(() => {
-    if (typeof window !== 'undefined' && (window as any).zoltStrikeMenuLink) {
-      (window as any).zoltStrikeMenuLink(1);
-    }
-  }, 0.7);
-
-  tl.add(() => {
-    if (typeof window !== 'undefined' && (window as any).zoltStrikeMenuLink) {
-      (window as any).zoltStrikeMenuLink(2);
-    }
-  }, 1.3);
-
-  tl.add(() => {
-    if (typeof window !== 'undefined' && (window as any).zoltStrikeMenuLink) {
-      (window as any).zoltStrikeMenuLink(3);
-    }
-  }, 1.9);
-
-  // Corner cards: micro "snap to spec" after strikes
+  // Ring + platform (hero-only DOM; scroll fade on .hero-fx-layer)
   safeFromTo(
-    '.corner-card',
-    { skewX: -4, rotateX: 5 },
-    { skewX: 0, rotateX: 0, duration: 0.85, ease: 'elastic.out(1)', stagger: 0.08 },
-    2.15
+    '.hero-orbit-ring-scale',
+    { opacity: 0, scale: 0.9 },
+    { opacity: 1, scale: 1, duration: 0.95, ease: 'power3.out' },
+    0.18
+  );
+  safeFromTo(
+    '.hero-energy-platform',
+    { opacity: 0, scale: 0.88 },
+    { opacity: 1, scale: 1, duration: 0.85, ease: 'power3.out' },
+    0.28
   );
 
-  // Energy pulse + bloom bump as the core "ignites"
+  safeFromTo(
+    '.hero-eyebrow',
+    { opacity: 0, y: 12 },
+    { opacity: 1, y: 0, duration: 0.65 },
+    0.35
+  );
+
+  safeFromTo(
+    '.hero-headline-line-inner',
+    { yPercent: 110, rotate: 2 },
+    {
+      yPercent: 0,
+      rotate: 0,
+      duration: 0.95,
+      ease: 'power4.out',
+      stagger: 0.12,
+    },
+    0.48
+  );
+
+  safeFromTo(
+    '.hero-body-copy',
+    { opacity: 0, y: 14 },
+    { opacity: 1, y: 0, duration: 0.7 },
+    0.72
+  );
+
+  safeFromTo(
+    '.hero-stat-row',
+    { opacity: 0, x: isDesktop ? 28 : 0, y: isDesktop ? 0 : 10 },
+    {
+      opacity: 1,
+      x: 0,
+      y: 0,
+      duration: 0.72,
+      ease: 'power3.out',
+      stagger: 0.1,
+    },
+    0.58
+  );
+
+  safeFromTo(
+    '.hero-cta-wrap',
+    { opacity: 0, y: 12 },
+    { opacity: 1, y: 0, duration: 0.65 },
+    1.05
+  );
+
+  safeFromTo(
+    '.hero-trailer-row',
+    { opacity: 0, y: 10 },
+    { opacity: 1, y: 0, duration: 0.6 },
+    1.22
+  );
+
+  // Energy pulse + bloom bump
   tl.to(scrollState, { energyPulse: 1, bloomIntensity: 0.52, duration: 0.14, ease: 'power2.out' }, 2.32);
   tl.to(scrollState, { energyPulse: 0, bloomIntensity: 0.34, duration: 0.45, ease: 'power2.inOut' }, 2.46);
 
-  // 2D shockwave ring (element lives in LandingPage #home)
   safeFromTo(
     '.hero-intro-shockwave',
     { opacity: 0, scale: 0.2 },
@@ -127,7 +171,6 @@ export function createHeroIntro(container?: HTMLElement | null) {
     tl.to(shock, { opacity: 0, scale: 2.1, duration: 0.65, ease: 'power2.in' }, 2.78);
   }
 
-  // Can rig: compressed → full identity in sync with canvas reveal
   tl.fromTo(
     scrollState.can,
     {
@@ -163,20 +206,6 @@ export function createHeroIntro(container?: HTMLElement | null) {
       (window as any).zoltRevealCenterContent();
     }
   }, 2.4);
-
-  // Center HUD lines: clip reveal (targets exist under .center-content)
-  safeFromTo(
-    '.hero-center-line-inner',
-    { yPercent: 110, rotate: 3 },
-    {
-      yPercent: 0,
-      rotate: 0,
-      duration: 1.05,
-      ease: 'power4.out',
-      stagger: 0.12,
-    },
-    2.42
-  );
 
   safeFromTo(
     '.hero-scroll-cue',

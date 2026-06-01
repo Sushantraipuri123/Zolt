@@ -42,6 +42,13 @@ export default function CanModel({ groupRef }: CanModelProps) {
             m.metalness = Math.min(m.metalness + 0.12, 1);
             m.roughness = Math.max(m.roughness - 0.06, 0.14);
             m.envMapIntensity = 1.5;
+            // Condensation read: clearcoat exists on physical-like materials at runtime; TS omits it on MeshStandardMaterial in some @types versions.
+            const mExt = m as MeshStandardMaterial & {
+              clearcoat?: number;
+              clearcoatRoughness?: number;
+            };
+            mExt.clearcoat = Math.min((mExt.clearcoat ?? 0) + 0.22, 0.55);
+            mExt.clearcoatRoughness = Math.max((mExt.clearcoatRoughness ?? 0.35) * 0.85, 0.12);
           }
         });
       }

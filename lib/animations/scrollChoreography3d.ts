@@ -372,14 +372,16 @@ export function createScrollChoreography3d(
         ScrollTrigger.create({
           trigger: hero,
           start: 'top top',
-          end: 'bottom top', // Exactly 80vh of scroll when Section 1 leaves the viewport
+          end: 'bottom top', // Hero section height (100vh) of scroll when Section 1 leaves the viewport
           scrub: 0.8,
           animation: tl,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
+            const p = self.progress.toFixed(4);
             if (heroScene) {
-              heroScene.style.setProperty('--heroScroll', self.progress.toFixed(4));
+              heroScene.style.setProperty('--heroScroll', p);
             }
+            hero.style.setProperty('--heroScroll', p);
           },
         });
 

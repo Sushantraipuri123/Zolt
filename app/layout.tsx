@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Orbitron, Space_Grotesk, Outfit } from "next/font/google";
+import { Orbitron, Space_Grotesk, Outfit, Rajdhani } from "next/font/google";
 import "./globals.css";
 
 const orbitron = Orbitron({
@@ -20,6 +20,12 @@ const outfit = Outfit({
   weight: ["300", "400", "600", "700"],
 });
 
+const rajdhani = Rajdhani({
+  variable: "--font-hero-display",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Zolt — Hydration Reinvented",
   description:
@@ -34,7 +40,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${orbitron.variable} ${spaceGrotesk.variable} ${outfit.variable} h-full antialiased`}
+      className={`${orbitron.variable} ${spaceGrotesk.variable} ${outfit.variable} ${rajdhani.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body
