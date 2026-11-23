@@ -3,6 +3,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { useGSAP } from '@gsap/react';
 import { gsap } from '@/lib/gsap';
+import { isCompact } from '@/lib/device';
 
 function unsplashUrl(photoId: string, w: number) {
   return `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=${w}&q=80`;
@@ -230,7 +231,8 @@ export default function EnergyCoreGallery() {
               pin: true,
               scrub: true,
               start: 'top top',
-              end: () => `+=${pin1.offsetWidth}`,
+              end: () => `+=${pin1.offsetWidth * (isCompact() ? 0.75 : 1)}`,
+              anticipatePin: 1,
               invalidateOnRefresh: true,
             },
           })

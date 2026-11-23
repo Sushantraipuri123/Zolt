@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 import { gsap, SplitText } from '@/lib/gsap';
+import { pinEnd } from '@/lib/device';
 import { triggerFlash } from '@/lib/runtime';
 
 const PEAK = 0.72;
@@ -36,7 +37,8 @@ export default function ChargeMoment() {
           id: 'charge-pin',
           trigger: section,
           start: 'top top',
-          end: '+=230%',
+          end: pinEnd(230),
+          anticipatePin: 1,
           pin: true,
           scrub: true,
           invalidateOnRefresh: true,

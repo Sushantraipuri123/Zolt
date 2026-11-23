@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 import { gsap, SplitText } from '@/lib/gsap';
+import { pinEnd } from '@/lib/device';
 
 const STATS = [
   { value: 150, unit: 'mg', label: 'Natural caffeine' },
@@ -30,7 +31,8 @@ export default function Manifesto() {
           id: 'about-pin',
           trigger: section,
           start: 'top top',
-          end: '+=170%',
+          end: pinEnd(170),
+          anticipatePin: 1,
           pin: true,
           scrub: true,
           invalidateOnRefresh: true,

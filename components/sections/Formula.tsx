@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 import { gsap } from '@/lib/gsap';
+import { pinEnd } from '@/lib/device';
 
 const CALLOUTS = [
   { value: 150, unit: 'mg', label: 'Natural caffeine', body: 'Clean, steady lift without the synthetic spike.', side: 'left' },
@@ -26,7 +27,8 @@ export default function Formula() {
           id: 'formula-pin',
           trigger: section,
           start: 'top top',
-          end: '+=150%',
+          end: pinEnd(150),
+          anticipatePin: 1,
           pin: true,
           scrub: true,
           invalidateOnRefresh: true,

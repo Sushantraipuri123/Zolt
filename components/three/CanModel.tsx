@@ -4,8 +4,13 @@ import { useEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { Box3, Vector3 } from 'three';
 import type { Material, Mesh, MeshStandardMaterial } from 'three';
+import { isCompact } from '@/lib/device';
 
-const MODEL_URL = '/zoltcan3d.glb';
+/**
+ * Phones get the same model with 1024px textures instead of 2048px (a quarter
+ * of the GPU memory). Chosen once at load, so rotating a tablet never reloads it.
+ */
+const MODEL_URL = isCompact() ? '/zoltcan3d-mobile.glb' : '/zoltcan3d.glb';
 useGLTF.preload(MODEL_URL);
 
 /** Normalised can height in world units (the rig scales relative to this). */

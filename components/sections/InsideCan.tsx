@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 import { gsap } from '@/lib/gsap';
+import { isCompact } from '@/lib/device';
 import { runtime } from '@/lib/runtime';
 
 const PANELS = [
@@ -61,7 +62,9 @@ export default function InsideCan() {
           id: 'inside-pin',
           trigger: section,
           start: 'top top',
-          end: () => `+=${distance() * 1.15}`,
+          // Phones: ~0.8 px of swipe per px of ride (desktop 1.15), so four panels take two or three swipes.
+          end: () => `+=${distance() * (isCompact() ? 0.8 : 1.15)}`,
+          anticipatePin: 1,
           pin: true,
           scrub: true,
           invalidateOnRefresh: true,

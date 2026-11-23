@@ -8,7 +8,7 @@ import CanRig from './CanRig';
 import VoltageParticles from './VoltageParticles';
 import { gsap } from '@/lib/gsap';
 import { canFx, runtime } from '@/lib/runtime';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { isCompact } from '@/lib/device';
 
 /** Renders R3F from gsap.ticker so Lenis → ScrollTrigger → 3D all share one frame. */
 function TickerDriver() {
@@ -54,9 +54,11 @@ interface CanCanvasProps {
 }
 
 export default function CanCanvas({ onReady }: CanCanvasProps) {
-  const mobile = useMediaQuery('(max-width: 1023px)');
+  // Decided once at mount, so rotating a tablet doesn't rebuild the scene.
+  const [compact] = useState(isCompact);
   const [degraded, setDegraded] = useState(false);
-  const maxDpr = degraded ? 1 : mobile ? 1.5 : 1.75;
+  // Phones already have dense pixels; 1.25 looks the same at a fraction of the fill cost.
+  const maxDpr = degraded ? 1 : compact ? 1.25 : 1.75;
 
   return (
     <div className="can-canvas pointer-events-none fixed inset-0 z-20" aria-hidden>
@@ -70,7 +72,7 @@ export default function CanCanvas({ onReady }: CanCanvasProps) {
         <TickerDriver />
         <PerformanceMonitor onDecline={() => setDegraded(true)} />
         <StageLights />
-        <VoltageParticles count={mobile ? 220 : 620} />
+        <VoltageParticles count={compact ? 140 : 620} />
         <Suspense fallback={null}>
           <CanRig onReady={onReady} />
         </Suspense>

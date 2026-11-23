@@ -1320,6 +1320,20 @@ body {
   display: inline-block;
   width: 0.35em;
 }
+/* Phones: the line fills the screen width instead of staying 8vw-small. */
+@media (max-width: 767px) {
+  .footer-drink {
+    margin-top: 2rem;
+    padding: 1.75rem 0 0.5rem;
+  }
+  .footer-shine-line {
+    font-size: 14vw;
+    letter-spacing: 0.04em;
+  }
+  .footer-shine-space {
+    width: 0.25em;
+  }
+}
 .footer-shine-char {
   display: inline-block;
   background: linear-gradient(
@@ -1477,6 +1491,27 @@ body {
     animation: none !important;
   }
   .cursor-ring {
+    display: none;
+  }
+}
+
+/* ========================================================================== */
+/* Phones and tablets: drop the effects that are costly to paint every frame   */
+/* (same query as lib/device.ts COMPACT_QUERY). Desktop is unchanged.          */
+/* ========================================================================== */
+
+@media (max-width: 1023px), (pointer: coarse) {
+  /* A full-screen noise layer, twice the viewport, re-composited 6×/s over the 3D canvas. */
+  .grain {
+    display: none;
+  }
+  /* Blurring what's behind each tile on every scroll frame. */
+  .stat-tile {
+    backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.04);
+  }
+  /* A filtered, blended video inside a moving pinned track. */
+  .inside-video {
     display: none;
   }
 }

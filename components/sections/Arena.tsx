@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import Image from 'next/image';
 import { useGSAP } from '@gsap/react';
 import { gsap } from '@/lib/gsap';
+import { pinEnd } from '@/lib/device';
 
 /**
  * 06 ARENA — two worlds, one can. Altitude is torn away by a lightning-shaped
@@ -25,7 +26,8 @@ export default function Arena() {
             id: 'arena-pin',
             trigger: section,
             start: 'top top',
-            end: '+=240%',
+            end: pinEnd(240),
+            anticipatePin: 1,
             pin: true,
             scrub: true,
             invalidateOnRefresh: true,
