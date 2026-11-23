@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useCallback, useRef, useState } from 'react';
+import { useGSAP } from '@gsap/react';
+import { gsap } from '@/lib/gsap';
 
 function unsplashUrl(photoId: string, w: number) {
   return `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=${w}&q=80`;
@@ -161,10 +163,86 @@ function PinImg({ shot }: { shot: (typeof ADVENTURE)[keyof typeof ADVENTURE] }) 
   );
 }
 
+/**
+ * 08 OUT THERE — grid zooms down from depth with outer columns flying in,
+ * a parallax strip expands, then two pinned rows counter-scroll.
+ */
 export default function EnergyCoreGallery() {
   const px = ADVENTURE.parallax;
+  const root = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      const section = root.current;
+      if (!section) return;
+      const desktop = window.matchMedia('(min-width: 1024px)').matches;
+      const scrub = desktop ? 0.6 : 0.8;
+
+      gsap.from('.ecg-head .fx-reveal', {
+        yPercent: 90,
+        autoAlpha: 0,
+        stagger: 0.08,
+        duration: 1.1,
+        ease: 'expo.out',
+        scrollTrigger: { trigger: '.ecg-head', start: 'top 80%' },
+      });
+
+      const gridLayout = section.querySelector('.ecg-grid-layout');
+      if (gridLayout) {
+        const gridTl = gsap.timeline({
+          defaults: { ease: 'power1.inOut' },
+          scrollTrigger: {
+            trigger: '.ecg-grid-section',
+            start: 'top center',
+            end: 'bottom+=10% bottom',
+            scrub,
+            invalidateOnRefresh: true,
+          },
+        });
+        gridTl.from(gridLayout, { scale: 3, transformOrigin: 'center top' }, 0);
+        gsap.utils.toArray<HTMLElement>('.ecg-column-1 .ecg-grid-image', section).forEach((el, i) => {
+          gridTl.from(el, { duration: 0.6, xPercent: -((i + 1) * 40 + i * 100), yPercent: (i + 1) * 40 + i * 100 }, 0);
+        });
+        gsap.utils.toArray<HTMLElement>('.ecg-column-3 .ecg-grid-image', section).forEach((el, i) => {
+          gridTl.from(el, { duration: 0.6, xPercent: (i + 1) * 40 + i * 100, yPercent: (i + 1) * 40 + i * 100 }, 0);
+        });
+      }
+
+      gsap.fromTo(
+        '.ecg-parallax-section',
+        { scale: 1 / 3, transformOrigin: 'center top' },
+        {
+          scale: 1,
+          ease: 'none',
+          scrollTrigger: { trigger: '.ecg-parallax-section', start: 'top bottom', end: 'bottom top', scrub, invalidateOnRefresh: true },
+        }
+      );
+
+      const pin1 = section.querySelector<HTMLElement>('.ecg-pin-content-1');
+      const pin2 = section.querySelector<HTMLElement>('.ecg-pin-content-2');
+      if (pin1 && pin2) {
+        const vw = () => window.innerWidth;
+        gsap
+          .timeline({
+            scrollTrigger: {
+              id: 'gallery-pin',
+              trigger: '.ecg-pin-section',
+              pin: true,
+              scrub: true,
+              start: 'top top',
+              end: () => `+=${pin1.offsetWidth}`,
+              invalidateOnRefresh: true,
+            },
+          })
+          .fromTo(pin1, { x: () => vw() * 0.9 }, { x: () => -pin1.offsetWidth, ease: 'none' }, 0)
+          .fromTo(pin2, { x: () => -pin2.offsetWidth + vw() * 0.1 }, { x: () => vw(), ease: 'none' }, 0);
+      }
+    },
+    { scope: root }
+  );
 
   return (
+    <section ref={root} id="energy-core" className="ecg-root relative z-[5] w-full overflow-x-clip">
     <div className="ecg-inner relative w-full bg-[#030303] text-white">
       <div className="pointer-events-none absolute inset-0 z-[1] bg-radial-vignette opacity-90" aria-hidden />
       <div
@@ -177,22 +255,22 @@ export default function EnergyCoreGallery() {
         aria-hidden
       />
 
-      <header className="relative z-[2] px-6 pt-20 pb-10 md:px-12 md:pt-28 md:pb-14 max-w-5xl">
-        <p className="font-space-grotesk text-[10px] font-black tracking-[0.35em] text-[var(--accent)] uppercase mb-4">
-          Core sequence // Scroll
+      <header className="ecg-head relative z-[2] max-w-5xl px-5 pt-28 pb-12 md:px-10 md:pt-36 md:pb-16">
+        <p className="line-mask">
+          <span className="fx-reveal label block text-volt">[ 008 ] Out there</span>
         </p>
-        <h2
-          className="font-outfit text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[0.95]"
-          style={{ fontFamily: 'var(--font-orbitron), var(--font-outfit), sans-serif' }}
-        >
-          ENERGY
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] via-[#ffb300] to-[var(--accent-cyan)]">
-            {' '}
-            DEPTH
+        <h2 className="display mt-4 text-[clamp(2.4rem,6vw,6.4rem)] leading-[0.9]">
+          <span className="line-mask">
+            <span className="fx-reveal block">Live at</span>
+          </span>
+          <span className="line-mask">
+            <span className="fx-reveal block text-stroke-volt">full voltage.</span>
           </span>
         </h2>
-        <p className="mt-5 max-w-xl text-sm md:text-base text-zinc-500 font-light leading-relaxed">
-          A scroll-native gallery: macro grid, parallax compression, and dual-axis drift—built for Lenis + ScrollTrigger.
+        <p className="line-mask mt-6 max-w-xl">
+          <span className="fx-reveal block text-[15px] leading-relaxed text-bone/60">
+            Mountains, waves, tracks and late-night runs. Wherever you push, Zolt goes with you.
+          </span>
         </p>
       </header>
 
@@ -250,9 +328,10 @@ export default function EnergyCoreGallery() {
         </div>
       </div>
 
-      <div className="ecg-spacer ecg-spacer--tall flex items-center justify-center text-center text-zinc-600 text-xs md:text-sm font-space-grotesk tracking-widest uppercase px-6">
+      <div className="ecg-spacer ecg-spacer--tall label flex items-center justify-center px-6 text-center text-bone/40">
         Flow state unlocked
       </div>
     </div>
+    </section>
   );
 }

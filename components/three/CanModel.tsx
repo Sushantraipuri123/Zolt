@@ -1,63 +1,56 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { Box3, Group, Vector3 } from 'three';
-import type { Mesh, MeshStandardMaterial } from 'three';
+import { Box3, Vector3 } from 'three';
+import type { Material, Mesh, MeshStandardMaterial } from 'three';
 
-useGLTF.preload('/zoltcan3d.glb');
+const MODEL_URL = '/zoltcan3d.glb';
+useGLTF.preload(MODEL_URL);
+
+/** Normalised can height in world units (the rig scales relative to this). */
+export const CAN_HEIGHT = 2.2;
 
 interface CanModelProps {
-  groupRef: React.RefObject<Group | null>;
+  materialsRef: React.RefObject<Material[]>;
+  onReady?: () => void;
 }
 
-const TARGET_HEIGHT = 2.2;
+export default function CanModel({ materialsRef, onReady }: CanModelProps) {
+  const { scene } = useGLTF(MODEL_URL);
 
-export default function CanModel({ groupRef }: CanModelProps) {
-  const { scene } = useGLTF('/zoltcan3d.glb');
-
-  const centered = useMemo(() => {
+  const model = useMemo(() => {
     const clone = scene.clone(true);
     const box = new Box3().setFromObject(clone);
     const size = new Vector3();
     const center = new Vector3();
     box.getSize(size);
     box.getCenter(center);
-    clone.position.sub(center);
-    const scale = TARGET_HEIGHT / (size.y || 1);
-    clone.scale.setScalar(scale);
+    const s = CAN_HEIGHT / (size.y || 1);
+    clone.scale.setScalar(s);
+    clone.position.copy(center).multiplyScalar(-s);
     return clone;
   }, [scene]);
 
   useEffect(() => {
-    centered.traverse((child) => {
-      if ((child as Mesh).isMesh) {
-        const mesh = child as Mesh;
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        mats.forEach((mat) => {
-          if ((mat as MeshStandardMaterial).isMeshStandardMaterial) {
-            const m = mat as MeshStandardMaterial;
-            m.metalness = Math.min(m.metalness + 0.12, 1);
-            m.roughness = Math.max(m.roughness - 0.06, 0.14);
-            m.envMapIntensity = 1.5;
-            // Condensation read: clearcoat exists on physical-like materials at runtime; TS omits it on MeshStandardMaterial in some @types versions.
-            const mExt = m as MeshStandardMaterial & {
-              clearcoat?: number;
-              clearcoatRoughness?: number;
-            };
-            mExt.clearcoat = Math.min((mExt.clearcoat ?? 0) + 0.22, 0.55);
-            mExt.clearcoatRoughness = Math.max((mExt.clearcoatRoughness ?? 0.35) * 0.85, 0.12);
-          }
-        });
-      }
+    const mats: Material[] = [];
+    model.traverse((child) => {
+      const mesh = child as Mesh;
+      if (!mesh.isMesh) return;
+      const list = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      list.forEach((mat) => {
+        const m = mat as MeshStandardMaterial;
+        if (m.isMeshStandardMaterial) {
+          m.metalness = Math.min(m.metalness + 0.15, 1);
+          m.roughness = Math.max(m.roughness - 0.08, 0.12);
+          m.envMapIntensity = 1.6;
+        }
+        if (!mats.includes(mat)) mats.push(mat);
+      });
     });
-  }, [centered]);
+    materialsRef.current = mats;
+    onReady?.();
+  }, [model, materialsRef, onReady]);
 
-  return (
-    <group ref={groupRef}>
-      <primitive object={centered} />
-    </group>
-  );
+  return <primitive object={model} />;
 }

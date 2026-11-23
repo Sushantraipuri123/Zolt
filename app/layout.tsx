@@ -1,54 +1,27 @@
-import type { Metadata } from "next";
-import { Orbitron, Space_Grotesk, Outfit, Rajdhani } from "next/font/google";
-import "./globals.css";
+import type { Metadata, Viewport } from 'next';
+import { Unbounded, Space_Grotesk, JetBrains_Mono, Outfit } from 'next/font/google';
+import './globals.css';
 
-const orbitron = Orbitron({
-  variable: "--font-orbitron",
-  subsets: ["latin"],
-  weight: ["400", "700", "900"],
-});
-
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  weight: ["300", "400", "600", "700"],
-});
-
-const rajdhani = Rajdhani({
-  variable: "--font-hero-display",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
+const display = Unbounded({ variable: '--font-unbounded', subsets: ['latin'], display: 'swap' });
+const sans = Space_Grotesk({ variable: '--font-grotesk', subsets: ['latin'], display: 'swap' });
+const mono = JetBrains_Mono({ variable: '--font-jetbrains', subsets: ['latin'], display: 'swap' });
+/** Footer "DRINK ZOLT" title only — matches the original shining footer type. */
+const outfit = Outfit({ variable: '--font-outfit', subsets: ['latin'], weight: ['700'], display: 'swap' });
 
 export const metadata: Metadata = {
-  title: "Zolt — Hydration Reinvented",
+  title: 'Zolt — Unleash the Charge',
   description:
-    "Zolt is the world’s first tokenized energy drink, blending cutting-edge blockchain innovation with peak performance.",
+    'Zolt is clean, high-voltage energy: 150mg natural caffeine, zero sugar and a full electrolyte load. No crash. No compromise.',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const viewport: Viewport = {
+  themeColor: '#050505',
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${orbitron.variable} ${spaceGrotesk.variable} ${outfit.variable} ${rajdhani.variable} h-full antialiased`}
-      suppressHydrationWarning
-    >
-      <body
-        className="min-h-full bg-[#020202] overflow-x-hidden antialiased"
-        suppressHydrationWarning
-      >
-        {children}
-      </body>
+    <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable} ${outfit.variable} is-locked`} suppressHydrationWarning>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

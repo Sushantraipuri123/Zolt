@@ -1,71 +1,80 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { Loader as DreiLoader } from '@react-three/drei';
-import CanScene from './CanScene';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Environment, Lightformer, PerformanceMonitor } from '@react-three/drei';
+import type { DirectionalLight } from 'three';
+import CanRig from './CanRig';
+import VoltageParticles from './VoltageParticles';
+import { gsap } from '@/lib/gsap';
+import { canFx, runtime } from '@/lib/runtime';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
-interface CanCanvasProps {
-  className?: string;
-  onMount?: () => void;
-  rotate?: boolean;
-  setRotate?: (val: boolean) => void;
+/** Renders R3F from gsap.ticker so Lenis → ScrollTrigger → 3D all share one frame. */
+function TickerDriver() {
+  const advance = useThree((s) => s.advance);
+  useEffect(() => {
+    const tick = (time: number) => advance(time, true);
+    gsap.ticker.add(tick);
+    return () => gsap.ticker.remove(tick);
+  }, [advance]);
+  return null;
 }
 
-export default function CanCanvas({ className = '', onMount, rotate, setRotate }: CanCanvasProps) {
-  const [mobile, setMobile] = useState(false);
+function StageLights() {
+  const rimWarm = useRef<DirectionalLight>(null);
+  const rimCool = useRef<DirectionalLight>(null);
 
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1023px)');
-    const update = () => setMobile(mq.matches);
-    update();
-    mq.addEventListener('change', update);
-    return () => mq.removeEventListener('change', update);
-  }, []);
-
-  useEffect(() => {
-    onMount?.();
-  }, [onMount]);
+  useFrame(() => {
+    const g = canFx.glow + runtime.flash * 1.4;
+    if (rimWarm.current) rimWarm.current.intensity = 1.4 + g * 3.4;
+    if (rimCool.current) rimCool.current.intensity = 0.7 + g * 1.3;
+  });
 
   return (
     <>
-      <div
-        className={`can-canvas pointer-events-none fixed inset-0 z-20 opacity-0 ${className}`}
-        aria-hidden
-      >
-        <Canvas
-          dpr={mobile ? [1, 1.5] : [1, 2]}
-          camera={{ position: [0, 0.2, 5.2], fov: 35, near: 0.1, far: 50 }}
-          gl={{
-            antialias: true,
-            alpha: true,
-            powerPreference: 'high-performance',
-          }}
-          style={{ background: 'transparent' }}
-        >
-          <Suspense fallback={null}>
-            <CanScene mobile={mobile} postFx={!mobile} rotate={rotate} setRotate={setRotate} />
-          </Suspense>
-        </Canvas>
-      </div>
-      <DreiLoader
-        containerStyles={{
-          background: '#020202',
-          zIndex: 30,
-        }}
-        barStyles={{
-          background: 'linear-gradient(90deg, #4d7cff, #00e5ff)',
-          height: '2px',
-        }}
-        dataStyles={{
-          color: '#6b6b6b',
-          fontFamily: 'var(--font-geist-sans), system-ui, sans-serif',
-          fontSize: '10px',
-          letterSpacing: '0.35em',
-          textTransform: 'uppercase',
-        }}
-        dataInterpolation={(p) => `CHARGING ${Math.round(p)}%`}
-      />
+      <ambientLight intensity={0.22} />
+      <directionalLight position={[2.5, 4, 6]} intensity={1.35} color="#fff6ee" />
+      <directionalLight ref={rimWarm} position={[-5, 2, -4]} intensity={2} color="#ff7120" />
+      <directionalLight ref={rimCool} position={[5, 1.5, -3]} intensity={1} color="#8fefff" />
+      {/* Studio reflections built from light-formers: no HDR download, brand-coloured highlights. */}
+      <Environment resolution={256} frames={1}>
+        <Lightformer form="rect" intensity={4} color="#ffffff" position={[0, 4, 3]} rotation-x={Math.PI / 2} scale={[10, 2, 1]} />
+        <Lightformer form="rect" intensity={7} color="#ff7120" position={[-5, 0.5, 1]} rotation-y={Math.PI / 2} scale={[6, 2.4, 1]} />
+        <Lightformer form="rect" intensity={3} color="#9fefff" position={[5, 1, -1]} rotation-y={-Math.PI / 2} scale={[6, 1.2, 1]} />
+        <Lightformer form="rect" intensity={2.5} color="#ffffff" position={[0, -3, 4]} rotation-x={-Math.PI / 2} scale={[8, 1, 1]} />
+        <Lightformer form="ring" intensity={2} color="#ffffff" position={[0, 0, -6]} scale={5} />
+      </Environment>
     </>
+  );
+}
+
+interface CanCanvasProps {
+  onReady?: () => void;
+}
+
+export default function CanCanvas({ onReady }: CanCanvasProps) {
+  const mobile = useMediaQuery('(max-width: 1023px)');
+  const [degraded, setDegraded] = useState(false);
+  const maxDpr = degraded ? 1 : mobile ? 1.5 : 1.75;
+
+  return (
+    <div className="can-canvas pointer-events-none fixed inset-0 z-20" aria-hidden>
+      <Canvas
+        frameloop="never"
+        dpr={[1, maxDpr]}
+        camera={{ position: [0, 0, 8], fov: 30, near: 0.1, far: 60 }}
+        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+        style={{ background: 'transparent' }}
+      >
+        <TickerDriver />
+        <PerformanceMonitor onDecline={() => setDegraded(true)} />
+        <StageLights />
+        <VoltageParticles count={mobile ? 220 : 620} />
+        <Suspense fallback={null}>
+          <CanRig onReady={onReady} />
+        </Suspense>
+      </Canvas>
+    </div>
   );
 }
