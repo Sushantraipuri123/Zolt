@@ -1,175 +1,47 @@
 'use client';
 
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useRef } from 'react';
+import Image from 'next/image';
 import { useGSAP } from '@gsap/react';
 import { gsap } from '@/lib/gsap';
-import { isCompact } from '@/lib/device';
-
-function unsplashUrl(photoId: string, w: number) {
-  return `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=${w}&q=80`;
-}
-
-/** Curated adventure / sports — distinct Unsplash `photo-*` ids; Picsum fallback covers removed/blocked assets. */
-const ADVENTURE = {
-  peaks: {
-    photoId: 'photo-1464822759023-fed622ff2c3b',
-    alt: 'Alpine ridge above clouds',
-    seed: 'zolt-alpine',
-  },
-  surf: {
-    photoId: 'photo-1502680390469-be75c86b636f',
-    alt: 'Surfer inside a barrel wave',
-    seed: 'zolt-surf',
-  },
-  climb: {
-    photoId: 'photo-1526304640581-d334cdbbf45e',
-    alt: 'Outdoor balance and movement on a summit',
-    seed: 'zolt-climb',
-  },
-  run: {
-    photoId: 'photo-1476480862126-209bfaa8edc8',
-    alt: 'Runner on an outdoor track',
-    seed: 'zolt-run',
-  },
-  gym: {
-    photoId: 'photo-1571902943202-507ec2618e8f',
-    alt: 'Swimming pool lanes — endurance training',
-    seed: 'zolt-gym',
-  },
-  trail: {
-    photoId: 'photo-1483721310020-03333e577078',
-    alt: 'Running shoes ready for a trail session',
-    seed: 'zolt-trail',
-  },
-  kayak: {
-    photoId: 'photo-1544551763-46a013bb70d5',
-    alt: 'Kayak on turquoise water',
-    seed: 'zolt-kayak',
-  },
-  skydive: {
-    photoId: 'photo-1505142468610-359e7d316be0',
-    alt: 'Skydiver above clouds',
-    seed: 'zolt-skydive',
-  },
-  mtb: {
-    photoId: 'photo-1571068316344-75bc76f77890',
-    alt: 'Mountain biking and outdoor motion',
-    seed: 'zolt-mtb',
-  },
-  parallax: {
-    photoId: 'photo-1506905925346-21bda4d32df4',
-    alt: 'Mountain summit above a sea of clouds',
-    seed: 'zolt-parallax',
-  },
-  nightRun: {
-    photoId: 'photo-1517836357463-d25dfeac3438',
-    alt: 'Night run in the city with stadium lights',
-    seed: 'zolt-night-run',
-  },
-  snowboard: {
-    photoId: 'photo-1551698618-1dfe5d97d224',
-    alt: 'Snowboarder carving powder',
-    seed: 'zolt-snow',
-  },
-  cliff: {
-    photoId: 'photo-1526778548025-fa2f459cd5c1',
-    alt: 'Coastal cliff and ocean',
-    seed: 'zolt-cliff',
-  },
-  stadium: {
-    photoId: 'photo-1461896836934-ffe607ba8211',
-    alt: 'Outdoor stadium and floodlights',
-    seed: 'zolt-stadium',
-  },
-  row: {
-    photoId: 'photo-1540497077202-7c8a3999166f',
-    alt: 'Crew rowing at sunrise',
-    seed: 'zolt-row',
-  },
-  boulder: {
-    photoId: 'photo-1544367567-0f2fcb009e0b',
-    alt: 'Athlete stretching before effort',
-    seed: 'zolt-stretch',
-  },
-} as const;
-
-function picsumFallback(seed: string) {
-  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/1000`;
-}
-
-function AdventureImg({
-  photoId,
-  w,
-  alt,
-  seed,
-  className,
-  sizes,
-}: {
-  photoId: string;
-  w: number;
-  alt: string;
-  seed: string;
-  className?: string;
-  sizes?: string;
-}) {
-  const primary = unsplashUrl(photoId, w);
-  const [src, setSrc] = useState(primary);
-  const usedFallback = useRef(false);
-
-  const onError = useCallback(() => {
-    if (usedFallback.current) return;
-    usedFallback.current = true;
-    setSrc(picsumFallback(seed));
-  }, [seed]);
-
-  return (
-    <img
-      src={src}
-      alt={alt}
-      className={className}
-      sizes={sizes}
-      loading="lazy"
-      decoding="async"
-      referrerPolicy="no-referrer"
-      onError={onError}
-    />
-  );
-}
-
-function GridImg({ shot }: { shot: (typeof ADVENTURE)[keyof typeof ADVENTURE] }) {
-  return (
-    <div className="ecg-grid-image">
-      <AdventureImg
-        photoId={shot.photoId}
-        w={1200}
-        alt={shot.alt}
-        seed={shot.seed}
-        sizes="(max-width: 1023px) 100vw, 33vw"
-      />
-    </div>
-  );
-}
-
-function PinImg({ shot }: { shot: (typeof ADVENTURE)[keyof typeof ADVENTURE] }) {
-  return (
-    <div className="ecg-pin-box">
-      <AdventureImg
-        photoId={shot.photoId}
-        w={1200}
-        alt={shot.alt}
-        seed={shot.seed}
-        className="ecg-pin-image"
-      />
-    </div>
-  );
-}
+import { runtime } from '@/lib/runtime';
 
 /**
- * 08 OUT THERE — grid zooms down from depth with outer columns flying in,
- * a parallax strip expands, then two pinned rows counter-scroll.
+ * Dark, high-contrast action shots (Unsplash licence), stored locally in
+ * public/images/gallery and ordered so light and dark cards alternate.
+ */
+const SHOTS = [
+  { src: '/images/gallery/night-run.jpg', alt: 'Runners silhouetted against a low evening sun', tag: 'Night run' },
+  { src: '/images/gallery/lift.jpg', alt: 'Athlete gripping a loaded barbell on a gym floor', tag: 'Lift' },
+  { src: '/images/gallery/powder.jpg', alt: 'Snowboarder carving a wall of powder into the sun', tag: 'Powder' },
+  { src: '/images/gallery/fight.jpg', alt: 'Black boxing gloves on the canvas', tag: 'Fight' },
+  { src: '/images/gallery/track.jpg', alt: 'Sprinters seen from above on an orange running track', tag: 'Track' },
+  { src: '/images/gallery/pull.jpg', alt: 'Athlete mid pull-up in a dark gym', tag: 'Pull' },
+  { src: '/images/gallery/surf.jpg', alt: 'Surfer riding inside a barrel wave', tag: 'Surf' },
+  { src: '/images/gallery/sprint.jpg', alt: 'Sprinter set in the starting blocks', tag: 'Sprint' },
+  { src: '/images/gallery/squat.jpg', alt: 'Athlete with a barbell across her shoulders, in black and white', tag: 'Squat' },
+  { src: '/images/gallery/stairs.jpg', alt: 'Runner in orange shoes powering up concrete stairs', tag: 'Climb' },
+  { src: '/images/gallery/spar.jpg', alt: 'Boxer throwing a punch at a sparring session', tag: 'Spar' },
+  { src: '/images/gallery/focus.jpg', alt: 'Athlete resting between sets in a dark gym', tag: 'Focus' },
+] as const;
+
+/** One full turn every 32s at rest (128s with reduced motion), like the reference ring. */
+const BASE_DEG_PER_S = 360 / 32;
+const REDUCED_DEG_PER_S = 360 / 128;
+/** Extra spin per unit of scroll velocity — the ring surges with the scroll, like the marquees. */
+const VELOCITY_BOOST = 160;
+/** Fastest fling a swipe can give the ring. */
+const MAX_FLING = 540;
+/** Ring radius in card-em units — keep in sync with .ecg-card's translateZ in globals.css. */
+const RING_RADIUS_EM = (0.5 * 17.5 + 0.5) / Math.tan(Math.PI / SHOTS.length);
+
+/**
+ * 08 OUT THERE — a 3D ring of cards. Desktop looks at it from inside; phones
+ * look from outside (carousel), which keeps the front card big on a narrow
+ * screen. It turns on its own, surges with scroll, can be swiped/dragged, and
+ * tilts in/out as it passes.
  */
 export default function EnergyCoreGallery() {
-  const px = ADVENTURE.parallax;
   const root = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -188,57 +60,97 @@ export default function EnergyCoreGallery() {
         scrollTrigger: { trigger: '.ecg-head', start: 'top 80%' },
       });
 
-      const gridLayout = section.querySelector('.ecg-grid-layout');
-      if (gridLayout) {
-        const gridTl = gsap.timeline({
-          defaults: { ease: 'power1.inOut' },
-          scrollTrigger: {
-            trigger: '.ecg-grid-section',
-            start: 'top center',
-            end: 'bottom+=10% bottom',
-            scrub,
-            invalidateOnRefresh: true,
-          },
-        });
-        gridTl.from(gridLayout, { scale: 3, transformOrigin: 'center top' }, 0);
-        gsap.utils.toArray<HTMLElement>('.ecg-column-1 .ecg-grid-image', section).forEach((el, i) => {
-          gridTl.from(el, { duration: 0.6, xPercent: -((i + 1) * 40 + i * 100), yPercent: (i + 1) * 40 + i * 100 }, 0);
-        });
-        gsap.utils.toArray<HTMLElement>('.ecg-column-3 .ecg-grid-image', section).forEach((el, i) => {
-          gridTl.from(el, { duration: 0.6, xPercent: (i + 1) * 40 + i * 100, yPercent: (i + 1) * 40 + i * 100 }, 0);
-        });
-      }
+      const scene = section.querySelector<HTMLElement>('.ecg-ring-scene');
+      const tilt = section.querySelector<HTMLElement>('.ecg-ring-tilt');
+      const ring = section.querySelector<HTMLElement>('.ecg-ring');
+      if (!scene || !tilt || !ring) return;
 
-      gsap.fromTo(
-        '.ecg-parallax-section',
-        { scale: 1 / 3, transformOrigin: 'center top' },
-        {
-          scale: 1,
-          ease: 'none',
-          scrollTrigger: { trigger: '.ecg-parallax-section', start: 'top bottom', end: 'bottom top', scrub, invalidateOnRefresh: true },
-        }
-      );
+      // Tilts up into view, flattens at centre screen, tips away on exit.
+      // Opacity is faded on the scene, never on the preserve-3d elements:
+      // opacity < 1 there forces the browser to flatten the ring into a strip.
+      gsap
+        .timeline({
+          defaults: { ease: 'none' },
+          scrollTrigger: { trigger: scene, start: 'top bottom', end: 'bottom top', scrub, invalidateOnRefresh: true },
+        })
+        .fromTo(tilt, { rotationX: 18, scale: 0.82 }, { rotationX: 0, scale: 1, duration: 0.5, ease: 'power2.out' }, 0)
+        .fromTo(scene, { opacity: 0.25 }, { opacity: 1, duration: 0.35, ease: 'power2.out' }, 0)
+        .to(tilt, { rotationX: -10, scale: 0.94, duration: 0.5, ease: 'power1.in' }, 0.5);
 
-      const pin1 = section.querySelector<HTMLElement>('.ecg-pin-content-1');
-      const pin2 = section.querySelector<HTMLElement>('.ecg-pin-content-2');
-      if (pin1 && pin2) {
-        const vw = () => window.innerWidth;
-        gsap
-          .timeline({
-            scrollTrigger: {
-              id: 'gallery-pin',
-              trigger: '.ecg-pin-section',
-              pin: true,
-              scrub: true,
-              start: 'top top',
-              end: () => `+=${pin1.offsetWidth * (isCompact() ? 0.75 : 1)}`,
-              anticipatePin: 1,
-              invalidateOnRefresh: true,
-            },
-          })
-          .fromTo(pin1, { x: () => vw() * 0.9 }, { x: () => -pin1.offsetWidth, ease: 'none' }, 0)
-          .fromTo(pin2, { x: () => -pin2.offsetWidth + vw() * 0.1 }, { x: () => vw(), ease: 'none' }, 0);
-      }
+      // Continuous spin on the shared ticker, paused while off-screen.
+      let visible = false;
+      const io = new IntersectionObserver(([entry]) => {
+        visible = entry.isIntersecting;
+      });
+      io.observe(scene);
+
+      const setRotY = gsap.quickSetter(ring, 'rotationY', 'deg');
+      let angle = 0;
+      let speed = BASE_DEG_PER_S;
+
+      // Swipe / drag: the ring follows the finger, then keeps the fling and eases back.
+      let dragging = false;
+      let lastX = 0;
+      let lastT = 0;
+      let degPerPx = 0;
+      let flingV = 0;
+
+      const onDown = (e: PointerEvent) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        const cs = getComputedStyle(scene);
+        // Outside view (phones) moves the front card with the finger; inside view is mirrored.
+        const dir = Number(cs.getPropertyValue('--ring-dir')) || -1;
+        const radiusPx = RING_RADIUS_EM * parseFloat(cs.fontSize);
+        degPerPx = (dir > 0 ? 1 : -1) * (180 / (Math.PI * radiusPx));
+        dragging = true;
+        flingV = 0;
+        lastX = e.clientX;
+        lastT = performance.now();
+        scene.classList.add('is-dragging');
+      };
+      const onMove = (e: PointerEvent) => {
+        if (!dragging) return;
+        const now = performance.now();
+        const d = (e.clientX - lastX) * degPerPx;
+        const dt = Math.max(now - lastT, 1) / 1000;
+        angle += d;
+        flingV = flingV * 0.6 + (d / dt) * 0.4;
+        lastX = e.clientX;
+        lastT = now;
+        setRotY(angle);
+      };
+      const onUp = () => {
+        if (!dragging) return;
+        dragging = false;
+        // A pause before release means no fling.
+        if (performance.now() - lastT > 120) flingV = 0;
+        speed = gsap.utils.clamp(-MAX_FLING, MAX_FLING, flingV);
+        scene.classList.remove('is-dragging');
+      };
+      scene.addEventListener('pointerdown', onDown);
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onUp);
+
+      const tick = (_t: number, deltaMs: number) => {
+        if (!visible || dragging) return;
+        const dt = Math.min(deltaMs, 50) / 1000;
+        const reduced = runtime.reducedMotion;
+        const target = reduced ? REDUCED_DEG_PER_S : BASE_DEG_PER_S + runtime.velocity * VELOCITY_BOOST;
+        speed += (target - speed) * (1 - Math.exp(-dt * 2.5));
+        angle = (angle + speed * dt) % 360;
+        setRotY(angle);
+      };
+      gsap.ticker.add(tick);
+
+      return () => {
+        gsap.ticker.remove(tick);
+        io.disconnect();
+        scene.removeEventListener('pointerdown', onDown);
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+      };
     },
     { scope: root }
   );
@@ -257,76 +169,50 @@ export default function EnergyCoreGallery() {
         aria-hidden
       />
 
-      <header className="ecg-head relative z-[2] max-w-5xl px-5 pt-28 pb-12 md:px-10 md:pt-36 md:pb-16">
-        <p className="line-mask">
-          <span className="fx-reveal label block text-volt">[ 008 ] Out there</span>
-        </p>
-        <h2 className="display mt-4 text-[clamp(2.4rem,6vw,6.4rem)] leading-[0.9]">
-          <span className="line-mask">
-            <span className="fx-reveal block">Live at</span>
-          </span>
-          <span className="line-mask">
-            <span className="fx-reveal block text-stroke-volt">full voltage.</span>
-          </span>
-        </h2>
-        <p className="line-mask mt-6 max-w-xl">
+      {/* Heading left, intro copy right on wide screens (like the hero); stacked on smaller ones. */}
+      <header className="ecg-head relative z-[2] flex flex-col gap-6 px-5 pt-28 pb-12 md:px-10 md:pt-36 md:pb-16 xl:flex-row xl:items-end xl:justify-between xl:gap-16">
+        <div className="shrink-0">
+          <p className="line-mask">
+            <span className="fx-reveal label block text-volt">[ 008 ] Out there</span>
+          </p>
+          {/* Always two lines on laptop+: "full voltage." must never break mid-phrase. */}
+          <h2 className="display mt-4 text-[clamp(2.4rem,6vw,6.4rem)] leading-[0.9] lg:whitespace-nowrap">
+            <span className="line-mask">
+              <span className="fx-reveal block">Live at</span>
+            </span>
+            <span className="line-mask">
+              <span className="fx-reveal block text-stroke-volt">full voltage.</span>
+            </span>
+          </h2>
+        </div>
+        <p className="line-mask max-w-xl xl:mr-12 xl:mb-3 xl:max-w-sm xl:border-l xl:border-volt/45 xl:pl-5">
           <span className="fx-reveal block text-[15px] leading-relaxed text-bone/60">
             Mountains, waves, tracks and late-night runs. Wherever you push, Zolt goes with you.
           </span>
         </p>
       </header>
 
-      <div className="ecg-grid-section relative z-[2] w-full overflow-visible">
-        <div className="ecg-grid-layout">
-          <div className="ecg-column ecg-column-1">
-            <div className="ecg-column-content">
-              <GridImg shot={ADVENTURE.peaks} />
-              <GridImg shot={ADVENTURE.surf} />
-              <GridImg shot={ADVENTURE.climb} />
-            </div>
-          </div>
-          <div className="ecg-column ecg-column-2">
-            <div className="ecg-column-content">
-              <GridImg shot={ADVENTURE.run} />
-              <GridImg shot={ADVENTURE.gym} />
-              <GridImg shot={ADVENTURE.trail} />
-            </div>
-          </div>
-          <div className="ecg-column ecg-column-3">
-            <div className="ecg-column-content">
-              <GridImg shot={ADVENTURE.kayak} />
-              <GridImg shot={ADVENTURE.skydive} />
-              <GridImg shot={ADVENTURE.mtb} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="ecg-spacer" aria-hidden />
-
-      <section className="ecg-parallax-section relative z-[2] w-full overflow-hidden px-4 md:px-8">
-        <AdventureImg
-          photoId={px.photoId}
-          w={1920}
-          alt={px.alt}
-          seed={px.seed}
-          className="ecg-parallax-image"
-          sizes="100vw"
-        />
-      </section>
-
-      <div className="ecg-spacer" aria-hidden />
-
-      <div className="ecg-pin-section relative z-[2] w-full overflow-hidden">
-        <div className="ecg-pin-content ecg-pin-content-1">
-          <PinImg shot={ADVENTURE.nightRun} />
-          <PinImg shot={ADVENTURE.snowboard} />
-          <PinImg shot={ADVENTURE.cliff} />
-        </div>
-        <div className="ecg-pin-content ecg-pin-content-2">
-          <PinImg shot={ADVENTURE.stadium} />
-          <PinImg shot={ADVENTURE.row} />
-          <PinImg shot={ADVENTURE.boulder} />
+      <div className="ecg-ring-scene relative z-[2]" data-cursor>
+        <div className="ecg-ring-glow" aria-hidden />
+        <div className="ecg-ring-tilt">
+          <ul className="ecg-ring" style={{ '--n': SHOTS.length } as React.CSSProperties}>
+            {SHOTS.map((shot, i) => (
+              <li key={shot.src} className="ecg-card" style={{ '--i': i } as React.CSSProperties}>
+                <Image
+                  src={shot.src}
+                  alt={shot.alt}
+                  fill
+                  sizes="(max-width: 1023px) 70vw, 320px"
+                  className="ecg-card-img"
+                  draggable={false}
+                />
+                <span className="ecg-card-caption">
+                  <span className="text-volt">{String(i + 1).padStart(2, '0')}</span>
+                  <span>{shot.tag}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 

@@ -416,6 +416,15 @@ body {
 .pl-bottom {
   bottom: 0;
 }
+/* Interactive dust behind the logo (components/ui/PreloaderParticles.tsx); clicks pass through to IGNITE. */
+.pl-particles {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
 .pl-seam {
   position: absolute;
   left: 0;
@@ -511,6 +520,8 @@ body {
   100% { box-shadow: 0 0 0 22px rgba(255, 113, 32, 0), 0 12px 40px -10px rgba(255, 113, 32, 0.7); }
 }
 .pl-hint {
+  /* with the 1rem gap ≈ 30px: clears IGNITE's 22px pulse ring */
+  margin-top: 0.9rem;
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.22em;
@@ -1374,96 +1385,135 @@ body {
   position: relative;
 }
 
-.ecg-grid-section {
-  width: 100%;
-  overflow: visible;
-  z-index: 2;
-}
-
-.ecg-grid-layout {
+/*
+ * 3D ring: N cards stacked in one grid cell, each turned by i × (1turn / N) and
+ * pushed out by the ring radius. --ring-dir picks the view:
+ *   -1 → cards pushed back, we look at the inside of a turning drum (desktop);
+ *   +1 → cards pushed forward, we look at the outside, carousel-style (phones/tablets),
+ *        so the front card is the biggest one on a narrow screen.
+ * Sized in em so the whole ring scales with the scene's font-size.
+ * Spin, swipe and scroll tilt are driven from EnergyCoreGallery.tsx.
+ */
+.ecg-ring-scene {
+  --ring-dir: -1;
   display: grid;
-  width: 100%;
-  min-height: 100%;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: clamp(0.5rem, 1.5vw, 1rem);
-  transform-origin: center top;
-}
-
-.ecg-column {
-  min-width: 0;
-}
-
-.ecg-column-content {
-  display: grid;
-  grid-template-rows: minmax(38vh, 45vh) minmax(38vh, 45vh) minmax(38vh, 45vh);
-  gap: clamp(0.5rem, 1.5vw, 1rem);
-  height: 100%;
-}
-
-.ecg-grid-image {
-  position: relative;
-  width: 100%;
-  min-height: 0;
-  border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  font-size: clamp(8px, 1.05vw, 17px);
+  padding-block: 4em 6em;
+  /* smaller = more extreme 3D */
+  perspective: 35em;
+  /* lateral fade */
+  -webkit-mask: linear-gradient(90deg, transparent, #000 20% 80%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 20% 80%, transparent);
+  /* horizontal drags spin the ring; vertical swipes still scroll the page */
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ecg-ring-scene.is-dragging {
+  cursor: grabbing;
+}/* Phones + tablets: outside view. Perspective must exceed the ring radius (~35em). */
+@media (max-width: 1023px) {
+  .ecg-ring-scene {
+    --ring-dir: 1;
+    font-size: clamp(8px, 2.3vw, 16px);
+    perspective: 100em;
+    padding-block: 8.5em 9em;
+    -webkit-mask: linear-gradient(90deg, transparent, #000 6% 94%, transparent);
+    mask: linear-gradient(90deg, transparent, #000 6% 94%, transparent);
+  }
+  .ecg-ring-glow {
+    top: 50%;
+    width: 60em;
+    height: 46em;
+  }
 }
 
-.ecg-grid-image img {
+.ecg-ring-glow {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  width: 70em;
+  height: 30em;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, rgba(255, 113, 32, 0.22), rgba(255, 61, 0, 0.06) 45%, transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+.ecg-ring-tilt,
+.ecg-ring {
+  display: grid;
+  place-self: center;
+  transform-style: preserve-3d;
+}
+
+.ecg-ring {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  will-change: transform;
+}
+
+.ecg-card {
+  --w: 17.5em;
+  --ba: calc(1turn / var(--n));
+  position: relative;
+  grid-area: 1 / 1;
+  width: var(--w);
+  aspect-ratio: 7 / 10;
+  overflow: hidden;
+  border-radius: 1.5em;
+  border: 1px solid rgba(255, 113, 32, 0.35);
+  background: var(--ink-2);
+  box-shadow:
+    0 0 2.5em rgba(255, 113, 32, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  /* don't show the backs of the cards in front of the screen plane */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* rotate first, then push back along the rotated z axis */
+  transform:
+    rotateY(calc(var(--i) * var(--ba)))
+    translateZ(calc(var(--ring-dir) * (0.5 * var(--w) + 0.5em) / tan(0.5 * var(--ba))));
+}
+.ecg-card > * {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.ecg-card-img {
+  object-fit: cover;
+  /* one grade for every photo so the set reads as a single campaign */
+  filter: contrast(1.08) saturate(0.88) brightness(0.88);
+  pointer-events: none;
+}
+
+/* Bottom scrim + caption in the site's mono label style. */
+.ecg-card::after {
+  content: '';
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  will-change: transform;
+  background:
+    linear-gradient(to top, rgba(5, 5, 5, 0.88) 0%, rgba(5, 5, 5, 0) 45%),
+    linear-gradient(155deg, rgba(255, 113, 32, 0.16) 0%, rgba(255, 113, 32, 0) 40%);
+  pointer-events: none;
 }
-
-.ecg-parallax-section {
-  height: 100vh;
-  width: 100%;
-  transform-origin: center top;
-}
-
-.ecg-parallax-image {
-  display: block;
-  height: 200vh;
-  width: 100%;
-  object-fit: cover;
-  will-change: transform;
-}
-
-.ecg-pin-section {
-  height: 100vh;
-  overflow: hidden;
-  display: grid;
-  grid-row-gap: clamp(0.5rem, 1.5vw, 1rem);
-  grid-template-rows: 1fr 1fr;
-}
-
-.ecg-pin-content {
-  width: 300%;
-  display: grid;
-  grid-column-gap: clamp(0.5rem, 1.5vw, 1rem);
-  grid-template-columns: 1fr 1fr 1fr;
-  will-change: transform;
-}
-
-.ecg-pin-box {
-  position: relative;
-  height: 100%;
-  min-height: clamp(140px, 28vh, 320px);
-  width: 100%;
-  border-radius: 4px;
-  overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
-}
-
-.ecg-pin-image {
+.ecg-card-caption {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  left: 1.1em;
+  right: 1.1em;
+  bottom: 1em;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75em;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bone);
 }
 
 .ecg-spacer {
@@ -1472,6 +1522,11 @@ body {
 
 .ecg-spacer--tall {
   height: 28vh;
+}
+@media (max-width: 1023px) {
+  .ecg-spacer--tall {
+    height: 16vh;
+  }
 }
 
 

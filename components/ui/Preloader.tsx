@@ -7,6 +7,7 @@ import { gsap } from '@/lib/gsap';
 import { triggerFlash } from '@/lib/runtime';
 import MagneticButton from './MagneticButton';
 import BoltIcon from './BoltIcon';
+import PreloaderParticles from './PreloaderParticles';
 
 interface PreloaderProps {
   ready: boolean;
@@ -23,6 +24,8 @@ export default function Preloader({ ready, ignited, onIgnite, reduced }: Preload
   const root = useRef<HTMLDivElement>(null);
   const progress = useProgress((s) => s.progress);
   const [timedOut, setTimedOut] = useState(false);
+  /** True once the blast doors have fully opened — stops the particle loop for good. */
+  const [gone, setGone] = useState(false);
 
   // Never trap the visitor if the model stalls.
   useEffect(() => {
@@ -37,13 +40,17 @@ export default function Preloader({ ready, ignited, onIgnite, reduced }: Preload
     () => {
       if (!ignited || !root.current) return;
       const tl = gsap.timeline({
-        onComplete: () => gsap.set(root.current, { display: 'none' }),
+        onComplete: () => {
+          gsap.set(root.current, { display: 'none' });
+          setGone(true);
+        },
       });
       if (reduced) {
         tl.to(root.current, { autoAlpha: 0, duration: 0.5 });
         return;
       }
       tl.to('.pl-content', { scale: 1.15, autoAlpha: 0, duration: 0.45, ease: 'power3.in' }, 0)
+        .to('.pl-particles', { autoAlpha: 0, duration: 0.4, ease: 'power2.in' }, 0)
         .call(() => triggerFlash(1.3), undefined, 0.35)
         .to('.pl-flash', { opacity: 1, duration: 0.06 }, 0.35)
         .to('.pl-flash', { opacity: 0, duration: 0.5, ease: 'power2.out' }, 0.42)
@@ -59,6 +66,7 @@ export default function Preloader({ ready, ignited, onIgnite, reduced }: Preload
     <div ref={root} className="preloader" role="dialog" aria-label="Loading Zolt">
       <div className="pl-half pl-top" />
       <div className="pl-half pl-bottom" />
+      <PreloaderParticles active={!gone} reduced={reduced} />
       <div className="pl-seam" />
       <div className="pl-flash" />
 

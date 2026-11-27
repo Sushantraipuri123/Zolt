@@ -67,7 +67,9 @@ export default function CanCanvas({ onReady }: CanCanvasProps) {
         dpr={[1, maxDpr]}
         camera={{ position: [0, 0, 8], fov: 30, near: 0.1, far: 60 }}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-        style={{ background: 'transparent' }}
+        // R3F sets pointer-events:auto on its own wrapper; force it off so this
+        // full-screen layer never swallows clicks/drags meant for the page below.
+        style={{ background: 'transparent', pointerEvents: 'none' }}
       >
         <TickerDriver />
         <PerformanceMonitor onDecline={() => setDegraded(true)} />
